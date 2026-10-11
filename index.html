@@ -50,6 +50,7 @@ button.del{background:#fee2e2;color:#b91c1c;border:0;padding:4px 8px;border-radi
 .row{display:flex;gap:8px}
 .row>*{flex:1}
 .pres .sens{filter:blur(6px);user-select:none}
+.avatar-wrap{display:flex;align-items:center;gap:10px;margin-bottom:10px}
 body.priv main{filter:blur(14px)}
 body.dark{background:#0f172a;color:#e2e8f0}
 body.dark .card,body.dark .kpi{background:#1e293b;border-color:#334155;color:#e2e8f0}
@@ -108,6 +109,13 @@ function setHdr(){
   document.body.classList.toggle('dark',!!(S&&S.cfg&&S.cfg.oscuro));
   document.body.classList.toggle('ro',!!(S&&S.cfg&&S.cfg.soloLectura));
 }
+/* ===== avatar del perfil (P.12) ===== */
+function avatarHTML(p,size){
+  const nom=(p&&p.nombre)||'?';
+  const ini=nom.split(/\s+/).filter(Boolean).slice(0,2).map(w=>w[0].toUpperCase()).join('')||'?';
+  let h=0; for(const ch of nom) h=(h*31+ch.charCodeAt(0))%360;
+  return `<span style="display:inline-flex;align-items:center;justify-content:center;width:${size}px;height:${size}px;border-radius:50%;background:linear-gradient(135deg,hsl(${h},55%,38%),hsl(${h},55%,25%));color:#fff;font-weight:700;font-size:${Math.round(size*0.38)}px;border:2px solid #c9a227;flex-shrink:0;vertical-align:middle">${esc(ini)}</span>`;
+}
 /* ===== criptografía ===== */
 const enc=new TextEncoder(), dec=new TextDecoder();
 function b64(buf){ const b=new Uint8Array(buf); let s=''; for(let i=0;i<b.length;i++) s+=String.fromCharCode(b[i]); return btoa(s); }
@@ -164,7 +172,7 @@ function showPerfiles(){
   const l=getPerfiles();
   document.getElementById('app').innerHTML=`<div class="card"><h2>Perfiles</h2>
     <p class="meta">Cada perfil tiene su propio PIN y sus datos cifrados.</p>
-    ${l.map(p=>`<div class="item"><button class="btn" onclick="elegirPerfil('${p.id}')">${esc(p.nombre)}${p.cargo?' · '+esc(p.cargo):''}</button><button class="mini" onclick="editarPerfil('${p.id}')">Editar</button><button class="del" onclick="eliminarPerfil('${p.id}')">Eliminar</button></div>`).join('')}
+    ${l.map(p=>`<div class="item">${avatarHTML(p,36)} <button class="btn" style="width:auto;display:inline-block;margin-top:0" onclick="elegirPerfil('${p.id}')">${esc(p.nombre)}${p.cargo?' · '+esc(p.cargo):''}</button><button class="mini" onclick="editarPerfil('${p.id}')">Editar</button><button class="del" onclick="eliminarPerfil('${p.id}')">Eliminar</button></div>`).join('')}
     <button class="btn sec" onclick="showSetup()">+ Nuevo perfil</button>
     <button class="btn sec" onclick="importarPerfil()">Importar perfil desde otro equipo</button></div>`;
 }
@@ -323,13 +331,14 @@ function vInicio(){
   return `
   <div class="card" style="background:linear-gradient(135deg,#1e3a5f,#2d5a8c);color:#fff;border:0">
     <div style="font-size:13px;opacity:.85">${saludo}</div>
-    <div style="font-size:19px;font-weight:700">Hola, ${esc(p.nombre.split(' ')[0])}</div>
+    <div style="display:flex;align-items:center;gap:12px">${avatarHTML(p,52)}<div style="font-size:19px;font-weight:700">Hola, ${esc(p.nombre.split(' ')[0])}</div></div>
     <div style="font-size:13px;margin-top:4px;opacity:.9;text-transform:capitalize">${fechaTxt}</div>
   </div>
   <div class="card"><input class="permite" placeholder="Buscar estudiante, atención o texto" oninput="buscarGlobal(this.value)"><div id="res"></div></div>
   <div class="card" style="border-left:4px solid #c9a227"><h3>Alertas del día</h3>
     ${alertas.length?alertas.map(a=>`<p style="margin:5px 0;font-size:14px">• ${esc(a)}</p>`).join(''):'<p class="empty">Sin alertas pendientes ✔</p>'}
     <button class="mini" onclick="activarNotif()">Activar notificaciones</button></div>
+  ${hoyHTML()}
   <div class="kpis">
     <div class="kpi"><b>${activos.length}</b><span>Estudiantes PIE activos</span></div>
     <div class="kpi"><b>${atMes.length}</b><span>Atenciones este mes</span></div>
@@ -337,6 +346,10 @@ function vInicio(){
     <div class="kpi"><b>${S.tasks.filter(t=>!t.done&&t.vence&&t.vence<hoy()).length}</b><span>Tareas vencidas</span></div>
     <div class="kpi"><b>${(()=>{const t=(S.plan||[]).reduce((a,p)=>a+(+p.min||0),0);const d=(S.plan||[]).filter(p=>p.tipo==='Atención directa').reduce((a,p)=>a+(+p.min||0),0);return t?Math.round(d/t*100):0;})()}%</b><span>Jornada en atención directa</span></div>
   </div>
+  <div class="card persp"><h3>Cumplimiento normativo global</h3>
+    <p>Estudiantes activos con checklist completo: <b>${activos.filter(checkOk).length}</b> de ${activos.length}</p>
+    <div class="bar"><div style="width:${activos.length?Math.round(activos.filter(checkOk).length/activos.length*100):0}%"></div></div>
+    <p class="meta">Evaluación, informe, consentimiento y reunión con apoderado.</p></div>
   <h2>Cuadro de Mando Integral</h2>
   <div class="card persp"><h3>1. Estudiantes (impacto)</h3>
     <p>Metas logradas: <b>${metasLogradas}</b> de ${S.goals.length}</p>
@@ -354,6 +367,26 @@ function vInicio(){
     <p>Horas de formación: <b>${formacion.toFixed(1)}</b></p>
     <p>Tareas completadas: <b>${pctTareas}%</b></p>
     <div class="bar"><div style="width:${pctTareas}%"></div></div></div>`;
+}
+/* ===== resumen del día y accesos rápidos (bloque 1) ===== */
+function resumenHoy(){
+  const h=hoy();
+  const reun=S.meetings.filter(r=>r.fecha===h&&r.estado!=='Cancelada');
+  const ats=S.sessions.filter(s=>s.fecha===h&&s.es==='Programada');
+  const tar=S.tasks.filter(t=>!t.done&&t.vence===h);
+  const act=S.students.filter(s=>s.estado==='Activo');
+  return {reun,ats,tar,chk:act.filter(checkOk).length,n:act.length};
+}
+function hoyHTML(){
+  const r=resumenHoy();
+  return `<div class="card"><h3>Hoy</h3>
+    <p>Reuniones: <b>${r.reun.length}</b> · Atenciones programadas: <b>${r.ats.length}</b> · Tareas para hoy: <b>${r.tar.length}</b></p>
+    <p>Checklist normativo completo: <b>${r.chk}</b> de ${r.n} estudiantes activos</p></div>`;
+}
+function recientesHTML(){
+  const ids=[...new Set([...S.sessions].sort((a,b)=>b.fecha.localeCompare(a.fecha)).map(s=>s.estudiante).filter(Boolean))].slice(0,5);
+  if(!ids.length) return '';
+  return '<p class="meta">Recientes:</p><div class="row" style="flex-wrap:wrap">'+ids.map(id=>`<button class="mini" type="button" onclick="document.getElementById('a_e').value='${id}'">${esc(nombreEst(id))}</button>`).join('')+'</div>';
 }
 /* ===== semáforo y checklist ===== */
 function semaforo(s){
@@ -469,7 +502,7 @@ function vAt(){
     const txt=(nombreEst(s.estudiante)+' '+s.tipo+' '+s.desc).toLowerCase();
     return (!FILT.txt||txt.includes(FILT.txt))&&(!FILT.tipo||s.tipo===FILT.tipo)&&(!FILT.mes||s.fecha.startsWith(FILT.mes));
   }).sort((a,b)=>b.fecha.localeCompare(a.fecha)).map(s=>`
-    <div class="item"><b>${fmtF(s.fecha)}</b> · <span class="tag">${esc(s.tipo)}</span><span class="tag">${esc(s.duracion)} min</span><span class="tag">${esc(s.pr||'Media')}</span><span class="tag">${esc(s.es||'Realizada')}</span><span class="tag">${esc(s.cn||'Presencial')}</span><br>
+    <div class="item"><b>${fmtF(s.fecha)}</b> · <span class="tag">${esc(s.tipo)}</span><span class="tag">${esc(s.duracion)} min</span><span class="tag ${s.pr==='Alta'?'red':s.pr==='Baja'?'ok':'warn'}">${esc(s.pr||'Media')}</span><span class="tag">${esc(s.es||'Realizada')}</span><span class="tag">${esc(s.cn||'Presencial')}</span><br>
       <span class="meta">Estudiante: ${esc(nombreEst(s.estudiante))}</span><br>
       <span class="sens">${esc(s.desc)}</span>
       <div style="margin-top:4px"><button class="mini" onclick="editarAt('${s.id}')">Editar</button><button class="del" onclick="borrar('sessions','${s.id}')">Eliminar</button></div></div>`).join('')||'<p class="empty">Sin atenciones con esos filtros.</p>';
@@ -487,6 +520,7 @@ function vAt(){
     <div class="row">${[30,45,60].map(m=>`<button class="mini" type="button" onclick="document.getElementById('a_d').value=${m}">${m} min</button>`).join('')}</div>
     <div class="row"><select id="a_pr">${opts(['Alta','Media','Baja'],'Media')}</select><select id="a_es">${opts(['Realizada','Programada','Cancelada','Reprogramada','No asistió'],'Realizada')}</select><select id="a_cn">${opts(['Presencial','Remoto','Telefónico','Correo','Mensajería'],'Presencial')}</select></div>
     <select id="a_t">${opts(TIPOS_ATENCION,'')}</select>
+    ${recientesHTML()}
     <select id="a_e"><option value="">— Sin estudiante específico —</option>${S.students.map(s=>`<option value="${s.id}">${esc(s.codigo)} - ${esc(s.nee)}</option>`).join('')}</select>
     <textarea id="a_desc" rows="3" placeholder="Descripción: objetivo, intervención, avances, acuerdos (mín. 10 caracteres)" oninput="DRAFT=this.value;sensAviso(this.value)">${esc(DRAFT)}</textarea>
     <p class="meta" id="sensWarn"></p>
@@ -599,6 +633,7 @@ function vRes(){
   const c=cfg();
   return `
   <h2>Ajustes y respaldo</h2>
+  <div class="card avatar-wrap">${avatarHTML(perfilActual()||{nombre:'?'},56)}<div><b>${esc((perfilActual()||{}).nombre||'')}</b><br><span class="meta">${esc((perfilActual()||{}).cargo||'')}</span></div></div>
   <div class="card">
     <p class="meta">Tus datos están cifrados en este equipo. Los respaldos también se cifran con una contraseña que tú eliges.</p>
     <button class="btn" onclick="exportar()">Exportar respaldo cifrado (.json)</button></div>
@@ -625,7 +660,7 @@ function vRes(){
     <h3>Vigencia de evaluación (meses)</h3>
     <input type="number" value="${c.plazoMeses}" onchange="cfg().plazoMeses=+this.value||24;save();render()">
     <p class="meta">Valor provisorio de 24 meses: verificar con el Decreto 170/2009 antes de usar con casos reales.</p></div>
-  <div class="card"><h3>Papelera</h3>${(S.papelera||[]).map((p,i)=>`<div class="item"><span class="meta">${esc(p.f)} · ${esc(p.col)}</span> <button class="mini" onclick="restaurarPapelera(${i})">Restaurar</button></div>`).join('')||'<p class="empty">Papelera vacía.</p>'}${(S.papelera||[]).length?'<button class="mini" onclick="vacearPapelera()">Vaciar papelera</button>':''}</div>
+  <div class="card"><h3>Papelera</h3>${(S.papelera||[]).map((p,i)=>`<div class="item"><span class="meta">${esc(p.f)} · ${esc(p.col)}</span> <button class="mini" onclick="restaurarPapelera(${i})">Restaurar</button></div>`).join('')||'<p class="empty">Papelera vacía.</p>'}${(S.papelera||[]).length?'<button class="btn sec" onclick="restaurarPapelera(0)">Deshacer última eliminación</button><button class="mini" onclick="vacearPapelera()">Vaciar papelera</button>':''}</div>
   <div class="card"><h3>Recursos</h3><button class="btn sec" onclick="go('recursos')">Recursos descargables</button></div>
   <div class="card"><button class="btn sec" onclick="borrarTodo()">Borrar todos los datos de este perfil</button></div>`;
 }
@@ -714,6 +749,7 @@ async function exportarPerfil(){
   const c=await cifrar(await deriveKey(pw,salt),JSON.stringify(S));
   const out=JSON.stringify({formato:'cmi-pie-perfil',v:1,meta:{nombre:pf.nombre,cargo:pf.cargo||'',establecimiento:pf.establecimiento||'',anio:pf.anio||''},salt:b64(salt),iv:c.iv,ct:c.ct});
   const a=document.createElement('a'); a.href=URL.createObjectURL(new Blob([out],{type:'application/json'})); a.download='perfil_cmi_pie_'+hoy()+'.json'; a.click();
+  alert('Paso 1 de 3 completado: perfil exportado.\n\nEl perfil de origen NO se borró. Guarda el archivo y su contraseña antes de importarlo en otro equipo.');
 }
 function importarPerfil(){
   const inp=document.createElement('input'); inp.type='file'; inp.accept='application/json';
@@ -723,6 +759,7 @@ function importarPerfil(){
       const obj=JSON.parse(await f.text()); if(obj.formato!=='cmi-pie-perfil') throw new Error('formato');
       const pw=prompt('Contraseña que usaste al transferir el perfil:'); if(pw===null) return;
       const datos=JSON.parse(await descifrar(await deriveKey(pw,unb64(obj.salt)),obj.iv,obj.ct));
+      if(!confirm('Paso 2 de 3 (verificación): archivo válido. Perfil: '+obj.meta.nombre+' · '+(datos.students||[]).length+' estudiante(s), '+(datos.sessions||[]).length+' atención(es), '+(datos.goals||[]).length+' meta(s). ¿Continuar con la importación?')) return;
       const p1=prompt('Nuevo PIN para este perfil en este equipo (6 a 12 números):'); if(p1===null) return;
       if(!pinValido(p1)){ alert('El PIN debe tener entre 6 y 12 números.'); return; }
       if(prompt('Repite el nuevo PIN:')!==p1){ alert('Los PIN no coinciden.'); return; }
@@ -732,7 +769,7 @@ function importarPerfil(){
       const lista=getPerfiles();
       lista.push({id,nombre:obj.meta.nombre,cargo:obj.meta.cargo,establecimiento:obj.meta.establecimiento,anio:obj.meta.anio,vk:'cmi_pie_vault_'+id,fallos:0,bloqueadoHasta:0});
       setPerfiles(lista); PID=id; await guardar();
-      alert('Perfil importado. Ingresa con tu nuevo PIN.'); showLock();
+      alert('Paso 3 de 3 completado: perfil importado. Ingresa con tu nuevo PIN. El perfil original en el otro equipo no fue modificado.'); showLock();
     }catch(e){ alert('No se pudo importar el perfil: archivo o contraseña no válidos.'); }
   };
   inp.click();
@@ -878,6 +915,7 @@ function vInf(){
   const log=(S.log||[]).slice(0,20).map(l=>`<p class="meta">${esc(l.f)} · ${esc(l.a)}</p>`).join('')||'<p class="empty">Sin accesos registrados.</p>';
   return `
   <h2>Informes y exportación</h2>
+  <p class="meta noprint">PDF: usa "Imprimir / guardar como PDF" y elige Guardar como PDF en el diálogo del navegador. Excel: el archivo .xls abre en Excel con 4 hojas (Estudiantes, Atenciones, Metas, Reuniones).</p>
   <div class="card"><h3>Filtro de fechas</h3>
     <div class="row"><div><small class="meta">Desde</small><input type="date" value="${FD}" onchange="FD=this.value;render()"></div><div><small class="meta">Hasta</small><input type="date" value="${FH}" onchange="FH=this.value;render()"></div></div>
     <button class="mini" onclick="FD='';FH='';render()">Quitar filtro</button>
@@ -889,8 +927,9 @@ function vInf(){
     <h3>Exportar</h3>
     <p class="meta">Los CSV contienen datos personales. Guárdalos en un lugar seguro.</p>
     <button class="btn" onclick="if(confirm('Se descargarán CSV con datos sensibles. ¿Continuar?'))exportarCSV()">Exportar a CSV (abre en Excel)</button>
+    <button class="btn" onclick="exportarExcel()">Exportar a Excel (.xls, 4 hojas)</button>
     <button class="btn" onclick="exportarICS()">Exportar calendario (.ics) para Google Calendar</button>
-    <button class="btn sec" onclick="window.print()">Imprimir informe</button></div>
+    <button class="btn sec" onclick="window.print()">Imprimir / guardar como PDF</button></div>
   <div class="card"><h3>Recursos de referencia</h3><p class="meta">Consulta la normativa vigente: Decreto 170/2009 y especial.mineduc.cl.</p></div>
   <div class="card"><h3>Registro de accesos</h3>${log}</div>`;
 }
@@ -901,6 +940,22 @@ function exportarCSV(){
   descargar('estudiantes_'+hoy()+'.csv',csvDe(est));
   const at=[['Fecha','Estudiante','Tipo','Minutos','Descripcion']].concat(S.sessions.map(s=>[s.fecha,nombreEst(s.estudiante),s.tipo,s.duracion,s.desc]));
   descargar('atenciones_'+hoy()+'.csv',csvDe(at));
+}
+/* Exportación a Excel (SpreadsheetML, abre en Excel como .xls) */
+function exportarExcel(){
+  if(!confirm('Se descargará un Excel con datos personales (códigos y atenciones). ¿Continuar?')) return;
+  const x=v=>String(v??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  const celda=v=>typeof v==='number'?'<Cell><Data ss:Type="Number">'+v+'</Data></Cell>':'<Cell><Data ss:Type="String">'+x(v)+'</Data></Cell>';
+  const hoja=(nombre,filas)=>'<Worksheet ss:Name="'+x(nombre)+'"><Table>'+filas.map(f=>'<Row>'+f.map(celda).join('')+'</Row>').join('')+'</Table></Worksheet>';
+  const en=s=>(!FD||s.fecha>=FD)&&(!FH||s.fecha<=FH);
+  const hojas=[
+    hoja('Estudiantes',[['Codigo','Curso','Estado','NEE','Fecha evaluacion','Reevaluacion','Profesional','Instrumentos','Elegibilidad','Derivacion','Fecha derivacion']].concat(S.students.map(s=>[s.codigo,s.curso,s.estado,s.nee,s.fechaEval,s.fechaReeval,s.prof,s.inst,s.elig,s.der,s.fder]))),
+    hoja('Atenciones',[['Fecha','Estudiante','Tipo','Minutos','Prioridad','Estado','Canal','Descripcion']].concat(S.sessions.filter(en).map(s=>[s.fecha,nombreEst(s.estudiante),s.tipo,+s.duracion||0,s.pr||'',s.es||'',s.cn||'',s.desc]))),
+    hoja('Metas',[['Estudiante','Meta','Area','Responsable','Linea base','Meta final','Plazo','Avance %']].concat(S.goals.map(g=>[nombreEst(g.estudiante),g.meta,g.area||'',g.resp||'',g.linea||'',g.final||'',g.plazo||'',+g.progreso||0]))),
+    hoja('Reuniones',[['Fecha','Estudiante','Estado','Participantes','Tema']].concat(S.meetings.map(r=>[r.fecha,nombreEst(r.estudiante),r.estado,r.participantes||'',r.tema||''])))
+  ].join('');
+  const libro='<?xml version="1.0"?><?mso-application progid="Excel.Sheet"?><Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet" xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet">'+hojas+'</Workbook>';
+  const a=document.createElement('a'); a.href=URL.createObjectURL(new Blob([libro],{type:'application/vnd.ms-excel'})); a.download='cmi_pie_datos_'+hoy()+'.xls'; a.click();
 }
 function icsEsc(s){ return String(s??'').replace(/\\/g,'\\\\').replace(/;/g,'\\;').replace(/,/g,'\\,').replace(/\n/g,'\\n'); }
 function icsEvento(id,fecha,titulo,desc){
