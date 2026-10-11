@@ -50,6 +50,7 @@ button.del{background:#fee2e2;color:#b91c1c;border:0;padding:4px 8px;border-radi
 .row{display:flex;gap:8px}
 .row>*{flex:1}
 .pres .sens{filter:blur(6px);user-select:none}
+body.priv main{filter:blur(14px)}
 body.dark{background:#0f172a;color:#e2e8f0}
 body.dark .card,body.dark .kpi{background:#1e293b;border-color:#334155;color:#e2e8f0}
 body.dark input,body.dark select,body.dark textarea{background:#0f172a;color:#e2e8f0;border-color:#334155}
@@ -69,7 +70,6 @@ body.ro main input:not(.permite),body.ro main select:not(.permite),body.ro main 
   <h1>CMI Psicólogo PIE</h1>
   <small id="hdrSub"></small>
 </header>
-<div id="privOv" style="display:none;position:fixed;inset:0;background:#0b1d33;color:#fff;z-index:99;align-items:center;justify-content:center;font-size:18px">CMI PIE · contenido protegido</div>
 <main id="app"></main>
 <button class="fab noprint" id="fab" onclick="nuevaAtencion()" title="Nueva atención">+</button>
 <nav id="nav" class="noprint"></nav>
@@ -89,6 +89,7 @@ const RESP_META=['Psicólogo PIE','Educadora diferencial','Docente de aula','Fam
 function uid(){ return Date.now().toString(36)+Math.random().toString(36).slice(2,7); }
 function esc(s){ return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
 function hoy(){ return new Date().toISOString().slice(0,10); }
+function fmtF(f){ return f?f.split('-').reverse().join('-'):'—'; }
 function mesActual(){ return hoy().slice(0,7); }
 function diasDesde(f){ return Math.floor((new Date(hoy())-new Date(f))/86400000); }
 function opts(arr,sel){ return arr.map(o=>`<option ${o===sel?'selected':''}>${esc(o)}</option>`).join(''); }
@@ -249,14 +250,14 @@ async function cambiarPin(){
 }
 /* ===== navegación ===== */
 const vistas={inicio:{t:'Inicio',i:'📊'},estudiantes:{t:'Estudiantes',i:'👦'},atenciones:{t:'Atenciones',i:'📝'},planes:{t:'Metas',i:'🎯'},familias:{t:'Familias',i:'👪'},tareas:{t:'Tareas',i:'✅'},casos:{t:'Casos',i:'🧭'},informes:{t:'Informes',i:'📄'},planif:{t:'Plan',i:'🗓️'},respaldo:{t:'Ajustes',i:'⚙️'}};
-const FN={inicio:vInicio,estudiantes:vEst,atenciones:vAt,planes:vPlanes,familias:vFam,tareas:vTar,casos:vCasos,informes:vInf,planif:vPlanif,respaldo:vRes,ficha:vFicha,infest:vInfEst};
+const FN={inicio:vInicio,estudiantes:vEst,atenciones:vAt,planes:vPlanes,familias:vFam,tareas:vTar,casos:vCasos,informes:vInf,planif:vPlanif,respaldo:vRes,ficha:vFicha,infest:vInfEst,recursos:vRec};
 function render(){
   if(!S) return;
   renderNav(true);
   document.getElementById('app').innerHTML=(FN[cur]||vInicio)();
 }
 function go(v,push=true){
-  if(cur==='atenciones'&&v!=='atenciones'&&DRAFT&&!confirm('Tienes una atención sin guardar. ¿Salir igual?')) return;
+  if(cur==='atenciones'&&DRAFT&&v!==cur&&!confirm('Tienes una atención sin guardar. ¿Salir igual?')) return;
   cur=v; if(push&&history.pushState) history.pushState({v},'');
   render(); window.scrollTo(0,0); resetTimer();
 }
@@ -334,6 +335,7 @@ function vInicio(){
     <div class="kpi"><b>${atMes.length}</b><span>Atenciones este mes</span></div>
     <div class="kpi"><b>${avgMetas}%</b><span>Avance promedio de metas</span></div>
     <div class="kpi"><b>${S.tasks.filter(t=>!t.done&&t.vence&&t.vence<hoy()).length}</b><span>Tareas vencidas</span></div>
+    <div class="kpi"><b>${(()=>{const t=(S.plan||[]).reduce((a,p)=>a+(+p.min||0),0);const d=(S.plan||[]).filter(p=>p.tipo==='Atención directa').reduce((a,p)=>a+(+p.min||0),0);return t?Math.round(d/t*100):0;})()}%</b><span>Jornada en atención directa</span></div>
   </div>
   <h2>Cuadro de Mando Integral</h2>
   <div class="card persp"><h3>1. Estudiantes (impacto)</h3>
@@ -348,16 +350,11 @@ function vInicio(){
   <div class="card persp"><h3>3. Familias y comunidad</h3>
     <p>Reuniones realizadas: <b>${reunRe}</b> de ${S.meetings.length}</p>
     <div class="bar"><div style="width:${pctReun}%"></div></div></div>
-  <div class="card persp"><h3>4. Recursos y tiempo</h3>
-    <p>Atención directa planificada: <b>${pctDirecta()}%</b> de la jornada</p>
-    <div class="bar"><div style="width:${pctDirecta()}%"></div></div>
-    <p class="meta">Revisa el detalle en la pestaña Plan.</p></div>
-  <div class="card persp"><h3>5. Aprendizaje y desarrollo profesional</h3>
+  <div class="card persp"><h3>4. Aprendizaje y desarrollo profesional</h3>
     <p>Horas de formación: <b>${formacion.toFixed(1)}</b></p>
     <p>Tareas completadas: <b>${pctTareas}%</b></p>
     <div class="bar"><div style="width:${pctTareas}%"></div></div></div>`;
 }
-function pctDirecta(){ const p=S.plan||[]; const tot=p.reduce((a,x)=>a+(+x.min||0),0); const d=p.filter(x=>x.tipo==='Atención directa').reduce((a,x)=>a+(+x.min||0),0); return tot?Math.round(d/tot*100):0; }
 /* ===== semáforo y checklist ===== */
 function semaforo(s){
   const venc=vencimientoEval(s);
@@ -462,7 +459,9 @@ function confirmarImport(){
   IMPQ=null; save(); render(); alert('Importación completa.');
 }
 function cambiarEstado(id){ const s=S.students.find(x=>x.id===id); const o=['Activo','Egresado','Retirado']; s.estado=o[(o.indexOf(s.estado)+1)%o.length]; save(); render(); }
-function borrar(col,id){ if(!confirm('¿Eliminar este registro?')) return; S[col]=S[col].filter(x=>x.id!==id); save(); render(); }
+function borrar(col,id){ if(!confirm('¿Eliminar este registro? Quedará en la papelera.')) return; S.papelera=S.papelera||[]; const it=S[col].find(x=>x.id===id); if(it) S.papelera.unshift({col,item:it,f:hoy()}); S[col]=S[col].filter(x=>x.id!==id); save(); render(); }
+function restaurarPapelera(i){ const p=S.papelera[i]; if(!p) return; S[p.col].push(p.item); S.papelera.splice(i,1); save(); render(); }
+function vacearPapelera(){ if(!confirm('¿Vaciar la papelera de forma definitiva?')) return; S.papelera=[]; save(); render(); }
 /* ===== atenciones ===== */
 function vAt(){
   const meses=[...new Set(S.sessions.map(s=>s.fecha.slice(0,7)))].sort().reverse();
@@ -470,7 +469,7 @@ function vAt(){
     const txt=(nombreEst(s.estudiante)+' '+s.tipo+' '+s.desc).toLowerCase();
     return (!FILT.txt||txt.includes(FILT.txt))&&(!FILT.tipo||s.tipo===FILT.tipo)&&(!FILT.mes||s.fecha.startsWith(FILT.mes));
   }).sort((a,b)=>b.fecha.localeCompare(a.fecha)).map(s=>`
-    <div class="item"><b>${esc(s.fecha)}</b> · <span class="tag">${esc(s.tipo)}</span><span class="tag">${esc(s.duracion)} min</span><span class="tag">${esc(s.pr||'Media')}</span><span class="tag">${esc(s.es||'Realizada')}</span><span class="tag">${esc(s.cn||'Presencial')}</span><br>
+    <div class="item"><b>${fmtF(s.fecha)}</b> · <span class="tag">${esc(s.tipo)}</span><span class="tag">${esc(s.duracion)} min</span><span class="tag">${esc(s.pr||'Media')}</span><span class="tag">${esc(s.es||'Realizada')}</span><span class="tag">${esc(s.cn||'Presencial')}</span><br>
       <span class="meta">Estudiante: ${esc(nombreEst(s.estudiante))}</span><br>
       <span class="sens">${esc(s.desc)}</span>
       <div style="margin-top:4px"><button class="mini" onclick="editarAt('${s.id}')">Editar</button><button class="del" onclick="borrar('sessions','${s.id}')">Eliminar</button></div></div>`).join('')||'<p class="empty">Sin atenciones con esos filtros.</p>';
@@ -508,6 +507,8 @@ function calcDur(){
 }
 function addAt(){
   const desc=document.getElementById('a_desc').value.trim();
+  if((document.getElementById('a_f').value||hoy())>hoy()){ alert('La fecha no puede ser futura.'); return; }
+  if(desc.length<10){ alert('La descripción debe tener al menos 10 caracteres.'); return; }
   S.sessions.push({id:uid(),fecha:document.getElementById('a_f').value||hoy(),duracion:calcDur()||document.getElementById('a_d').value||0,tipo:document.getElementById('a_t').value,estudiante:document.getElementById('a_e').value,desc,pr:document.getElementById('a_pr').value,es:document.getElementById('a_es').value,cn:document.getElementById('a_cn').value});
   DRAFT=''; save(); render();
 }
@@ -624,6 +625,8 @@ function vRes(){
     <h3>Vigencia de evaluación (meses)</h3>
     <input type="number" value="${c.plazoMeses}" onchange="cfg().plazoMeses=+this.value||24;save();render()">
     <p class="meta">Valor provisorio de 24 meses: verificar con el Decreto 170/2009 antes de usar con casos reales.</p></div>
+  <div class="card"><h3>Papelera</h3>${(S.papelera||[]).map((p,i)=>`<div class="item"><span class="meta">${esc(p.f)} · ${esc(p.col)}</span> <button class="mini" onclick="restaurarPapelera(${i})">Restaurar</button></div>`).join('')||'<p class="empty">Papelera vacía.</p>'}${(S.papelera||[]).length?'<button class="mini" onclick="vacearPapelera()">Vaciar papelera</button>':''}</div>
+  <div class="card"><h3>Recursos</h3><button class="btn sec" onclick="go('recursos')">Recursos descargables</button></div>
   <div class="card"><button class="btn sec" onclick="borrarTodo()">Borrar todos los datos de este perfil</button></div>`;
 }
 async function exportar(){
@@ -632,8 +635,7 @@ async function exportar(){
   if(pw.length<6){ alert('La contraseña debe tener al menos 6 caracteres.'); return; }
   const salt=crypto.getRandomValues(new Uint8Array(16));
   const c=await cifrar(await deriveKey(pw,salt),JSON.stringify(S));
-  const h=b64(await crypto.subtle.digest('SHA-256',enc.encode(c.ct)));
-  const out=JSON.stringify({formato:'cmi-pie-respaldo',v:2,salt:b64(salt),iv:c.iv,ct:c.ct,sha:h});
+  const out=JSON.stringify({formato:'cmi-pie-respaldo',v:2,salt:b64(salt),iv:c.iv,ct:c.ct});
   const a=document.createElement('a'); a.href=URL.createObjectURL(new Blob([out],{type:'application/json'}));
   a.download='respaldo_cifrado_cmi_pie_'+hoy()+'.json'; a.click();
   cfg().ultimoRespaldo=hoy(); save();
@@ -645,14 +647,14 @@ function importar(input){
     try{
       const obj=JSON.parse(r.result); let nuevo;
       if(obj.formato==='cmi-pie-respaldo'){
-        if(obj.sha){ const h2=b64(await crypto.subtle.digest('SHA-256',enc.encode(obj.ct))); if(h2!==obj.sha) throw new Error('integridad'); }
         const pw=prompt('Contraseña del respaldo:'); if(pw===null){ input.value=''; return; }
         nuevo=JSON.parse(await descifrar(await deriveKey(pw,unb64(obj.salt)),obj.iv,obj.ct));
       } else if(obj.students){
         if(!confirm('Este respaldo no está cifrado. ¿Continuar?')){ input.value=''; return; }
         nuevo=obj;
       } else throw new Error('formato');
-      if(!confirm('Esto reemplaza los datos actuales de este perfil. ¿Continuar?')){ input.value=''; return; }
+      if(!nuevo||!Array.isArray(nuevo.students)||!Array.isArray(nuevo.sessions)) throw new Error('estructura');
+      if(!confirm('Respaldo válido: '+nuevo.students.length+' estudiante(s) y '+nuevo.sessions.length+' atención(es). Esto reemplaza los datos actuales de este perfil. ¿Continuar?')){ input.value=''; return; }
       localStorage.setItem(vk()+'_prev',localStorage.getItem(vk()));
       S={students:[],sessions:[],goals:[],meetings:[],tasks:[],cases:[],plan:[],formacion:0,...nuevo};
       save(); render(); alert('Respaldo importado. Se guardó una copia previa en este equipo.');
@@ -665,6 +667,44 @@ function borrarTodo(){
   if(!confirm('¿Borrar este perfil y todos sus datos? Esta acción no se puede deshacer.')) return;
   localStorage.removeItem(vk()); localStorage.removeItem(vk()+'_prev');
   setPerfiles(getPerfiles().filter(p=>p.id!==PID)); PID=null; clearTimeout(timer); showPerfiles();
+}
+/* ===== recursos descargables (RD) ===== */
+const RD_BASE=[
+{id:'rdb1',base:true,t:'Ficha de observación de aula',tipo:'Ficha',nee:'General',c:'Fecha:\nCurso:\nDocente:\nActividad observada:\nConducta o aspecto observado:\nFrecuencia (siempre / a veces / nunca):\nAntecedentes:\nConsecuencias:\nEstrategias que funcionaron:\nObservaciones generales (sin datos identificatorios):'},
+{id:'rdb2',base:true,t:'Registro ABC (antecedente, conducta, consecuencia)',tipo:'Ficha',nee:'General',c:'Fecha y hora:\nLugar:\nAntecedente (qué ocurrió antes):\nConducta observada:\nConsecuencia (qué ocurrió después):\nHipótesis de función de la conducta:\nAcciones tomadas:'},
+{id:'rdb3',base:true,t:'Acta de reunión con familia',tipo:'Modelo de documento',nee:'General',c:'Fecha:\nHora:\nModalidad (presencial / virtual):\nParticipantes (por rol):\nTemas tratados:\nAcuerdos (responsable y fecha de cumplimiento):\nPróxima reunión:\nFirma del profesional:'},
+{id:'rdb4',base:true,t:'Modelo de consentimiento informado (revisar con tu establecimiento)',tipo:'Modelo de documento',nee:'General',c:'Yo, ____________________ (adulto responsable), declaro haber sido informado(a) sobre la evaluación psicoeducativa y el plan de apoyo del estudiante.\nAcepto / No acepto (marcar).\nFecha:\nFirma:'},
+{id:'rdb5',base:true,t:'Guía de estrategias para docentes de aula común',tipo:'Guía',nee:'General',c:'1. Anticipar las actividades y su secuencia.\n2. Usar apoyos visuales para las instrucciones.\n3. Dar tiempo adicional para responder.\n4. Fraccionar tareas largas en pasos cortos.\n5. Reforzar conductas esperadas de forma inmediata y específica.\n6. Coordinar con el equipo PIE antes de cambios importantes.'}
+];
+function getRD(){ try{ return JSON.parse(localStorage.getItem(RKEY))||[]; }catch(e){ return []; } }
+function setRD(l){ localStorage.setItem(RKEY,JSON.stringify(l)); }
+function vRec(){
+  const todos=[...RD_BASE,...getRD()];
+  const lista=todos.map(r=>`<div class="item"><b>${esc(r.t)}</b> <span class="tag">${esc(r.tipo)}</span><span class="tag">${esc(r.nee)}</span><br><span class="meta">${r.base?'Modelo base':'Compartido entre perfiles'}</span><div style="margin-top:4px"><button class="mini" onclick="descRec('${r.id}')">Descargar .txt</button>${r.base?'':`<button class="del" onclick="delRec('${r.id}')">Eliminar</button>`}</div></div>`).join('');
+  return `<button class="btn sec" onclick="go('respaldo')">← Volver a Ajustes</button>
+  <h2>Recursos descargables</h2>
+  <div class="card"><p class="meta">Material genérico que se comparte entre perfiles de este equipo. No se cifra: no escribas datos de estudiantes (códigos, nombres u observaciones).</p></div>
+  <div class="card"><h3>Nuevo recurso</h3>
+    <input id="rd_t" placeholder="Título (ej: Pauta de seguimiento de lectura)">
+    <div class="row"><select id="rd_tipo">${opts(['Plantilla','Guía','Ficha','Modelo de documento'],'Plantilla')}</select><select id="rd_nee">${opts(['General',...TIPOS_NEE],'General')}</select></div>
+    <textarea id="rd_c" rows="6" placeholder="Contenido del recurso"></textarea>
+    <button class="btn" onclick="addRec()">Guardar recurso</button></div>
+  <div class="card">${lista}</div>`;
+}
+function addRec(){
+  const t=document.getElementById('rd_t').value.trim(), c=document.getElementById('rd_c').value.trim();
+  if(!t||!c){ alert('Escribe título y contenido.'); return; }
+  const hit=(S.students||[]).map(s=>s.codigo).filter(x=>x&&x.length>=2).find(x=>(t+' '+c).toLowerCase().includes(x.toLowerCase()));
+  if(hit){ alert('El recurso contiene el código "'+hit+'". Los recursos compartidos no deben incluir datos de estudiantes. Quítalo antes de guardar.'); return; }
+  if(!confirm('Este recurso quedará disponible para todos los perfiles de este equipo, sin cifrar. ¿Continuar?')) return;
+  const l=getRD(); l.push({id:uid(),t,tipo:document.getElementById('rd_tipo').value,nee:document.getElementById('rd_nee').value,c,f:hoy()}); setRD(l); render();
+}
+function delRec(id){ if(!confirm('¿Eliminar este recurso compartido?')) return; setRD(getRD().filter(r=>r.id!==id)); render(); }
+function descRec(id){
+  const r=[...RD_BASE,...getRD()].find(x=>x.id===id); if(!r) return;
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(new Blob([r.t+'\n'+'-'.repeat(20)+'\n'+r.c+'\n'],{type:'text/plain;charset=utf-8'}));
+  a.download=r.t.replace(/[^\w]+/g,'_').slice(0,50)+'.txt'; a.click();
 }
 /* ===== transferencia de perfil (P.15) ===== */
 async function exportarPerfil(){
@@ -928,11 +968,15 @@ function vPlanif(){
 }
 function addPlan(){
   const h=document.getElementById('pl_h').value; if(!h){ alert('Indica la hora'); return; }
+  const dia0=document.getElementById('pl_d').value, tipo0=document.getElementById('pl_t').value;
+  const choque=(S.plan||[]).find(p=>p.dia===dia0&&p.hora===h);
+  if(choque&&!confirm('Ya hay un bloque ('+choque.tipo+') a esa hora el '+dia0+'. ¿Agregar de todas formas?')) return;
+  if(tipo0==='Atención directa'&&(S.plan||[]).some(p=>p.dia===dia0&&p.tipo==='Reunión institucional'&&p.hora===h)){ alert('Hay una reunión institucional a esa hora: no se puede bloquear atención directa encima.'); return; }
   S.plan=S.plan||[];
   S.plan.push({id:uid(),dia:document.getElementById('pl_d').value,hora:h,tipo:document.getElementById('pl_t').value,min:+document.getElementById('pl_m').value||0,nota:document.getElementById('pl_n').value.trim()});
   save(); render();
 }
-document.addEventListener('visibilitychange',()=>{const o=document.getElementById('privOv'); if(o) o.style.display=document.hidden?'flex':'none';});
+document.addEventListener('visibilitychange',()=>{document.body.classList.toggle('priv',document.hidden&&!!S);});
 boot();
 </script>
 </body>
