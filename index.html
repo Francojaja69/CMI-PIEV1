@@ -14,10 +14,11 @@ header{background:linear-gradient(135deg,#1e3a5f 0%,#0b1d33 100%);color:#fff;pad
 header h1{font-size:17px;margin:0}
 header small{opacity:.85;font-size:12px}
 main{padding:12px}
-nav{position:fixed;bottom:8px;left:8px;right:8px;display:flex;background:rgba(255,255,255,.96);border-radius:18px;box-shadow:0 8px 24px rgba(15,23,42,.18);z-index:5;padding:4px}
+nav{position:fixed;bottom:8px;left:8px;right:8px;display:flex;background:rgba(255,255,255,.96);border-radius:18px;box-shadow:0 8px 24px rgba(15,23,42,.18);z-index:5;padding:4px;overflow-x:auto}
 nav:empty{display:none}
-nav button{flex:1;padding:9px 0;border:0;background:none;font-size:11px;color:#475569}
+nav button{flex:1;min-width:52px;padding:9px 0;border:0;background:none;font-size:10px;color:#475569}
 nav button.act{color:#fff;font-weight:bold;background:linear-gradient(135deg,#1e3a5f,#2d5a8c);border-radius:12px}
+.fab{position:fixed;right:16px;bottom:90px;width:54px;height:54px;border-radius:50%;border:0;background:#c9a227;color:#0b1d33;font-size:30px;font-weight:bold;box-shadow:0 6px 16px rgba(0,0,0,.3);z-index:6}
 .card{background:#fff;border-radius:16px;padding:16px;margin-bottom:14px;box-shadow:0 2px 8px rgba(15,23,42,.06);border:1px solid #e2e8f0}
 .kpis{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px}
 .kpi{background:#fff;border-radius:16px;padding:14px 10px;text-align:center;box-shadow:0 2px 8px rgba(15,23,42,.06);border-top:4px solid #c9a227}
@@ -27,9 +28,10 @@ h2{font-size:18px;margin:4px 0 10px}
 h3{font-size:15px;margin:4px 0 8px;color:#1e3a5f}
 input,select,textarea{width:100%;padding:11px;margin:3px 0 10px;border:1px solid #cbd5e1;border-radius:12px;font-size:15px;background:#f8fafc;color:#1e293b}
 input:focus,select:focus,textarea:focus{outline:none;border-color:#2d5a8c;background:#fff;box-shadow:0 0 0 3px rgba(45,90,140,.15)}
+input[type=checkbox]{width:auto}
 button.btn{background:linear-gradient(135deg,#1e3a5f,#2d5a8c);color:#fff;border:0;padding:12px 14px;border-radius:12px;font-size:15px;font-weight:600;width:100%;margin-top:6px;box-shadow:0 3px 8px rgba(30,58,95,.3)}
 button.sec{background:#e2e8f0;color:#1e293b;box-shadow:none}
-button.mini{background:#e2e8f0;border:0;padding:4px 8px;border-radius:6px;font-size:12px;margin-left:4px}
+button.mini{background:#e2e8f0;border:0;padding:4px 8px;border-radius:6px;font-size:12px;margin-left:4px;color:#1e293b}
 button.del{background:#fee2e2;color:#b91c1c;border:0;padding:4px 8px;border-radius:6px;font-size:12px;margin-left:4px}
 .item{border-bottom:1px solid #e2e8f0;padding:9px 0;font-size:14px}
 .item:last-child{border-bottom:0}
@@ -37,8 +39,9 @@ button.del{background:#fee2e2;color:#b91c1c;border:0;padding:4px 8px;border-radi
 .tag{display:inline-block;background:#e0f2fe;color:#075985;border-radius:999px;padding:2px 9px;font-size:11px;margin-right:4px;font-weight:600}
 .tag.warn{background:#fef3c7;color:#92400e}
 .tag.ok{background:#dcfce7;color:#166534}
+.tag.red{background:#fee2e2;color:#b91c1c}
 .bar{background:#e2e8f0;border-radius:999px;height:10px;overflow:hidden;margin:6px 0}
-.bar div{background:linear-gradient(90deg,#c9a227,#16a34a);height:100%;border-radius:999px;transition:width .4s}
+.bar div{background:linear-gradient(90deg,#c9a227,#16a34a);height:100%;border-radius:999px}
 .persp{border-left:4px solid #1e3a5f;padding-left:10px;margin-bottom:12px}
 .persp p{margin:4px 0;font-size:14px}
 .late{color:#dc2626;font-weight:bold}
@@ -47,6 +50,18 @@ button.del{background:#fee2e2;color:#b91c1c;border:0;padding:4px 8px;border-radi
 .row{display:flex;gap:8px}
 .row>*{flex:1}
 .pres .sens{filter:blur(6px);user-select:none}
+body.dark{background:#0f172a;color:#e2e8f0}
+body.dark .card,body.dark .kpi{background:#1e293b;border-color:#334155;color:#e2e8f0}
+body.dark input,body.dark select,body.dark textarea{background:#0f172a;color:#e2e8f0;border-color:#334155}
+body.dark nav{background:rgba(30,41,59,.96)}
+body.dark nav button{color:#cbd5e1}
+body.dark button.mini,body.dark button.sec{background:#334155;color:#e2e8f0}
+body.dark .kpi b,body.dark h3{color:#93c5fd}
+body.dark .item{border-color:#334155}
+body.ro .fab{display:none!important}
+body.ro main button:not(.permite){display:none}
+body.ro main input:not(.permite),body.ro main select:not(.permite),body.ro main textarea:not(.permite){pointer-events:none;opacity:.6}
+@media print{header,nav,.fab,button,input,select,textarea,.noprint{display:none!important}body{background:#fff;padding:0}.card{box-shadow:none;border:0}}
 </style>
 </head>
 <body>
@@ -55,60 +70,58 @@ button.del{background:#fee2e2;color:#b91c1c;border:0;padding:4px 8px;border-radi
   <small id="hdrSub"></small>
 </header>
 <main id="app"></main>
-<nav id="nav"></nav>
+<button class="fab noprint" id="fab" onclick="nuevaAtencion()" title="Nueva atención">+</button>
+<nav id="nav" class="noprint"></nav>
 <script>
-const PKEY = 'cmi_pie_perfiles_v3';
-const VKEY_LEGACY = 'cmi_pie_franco_vault_v2';
-let PID = null;
-function getPerfiles(){ try{ return JSON.parse(localStorage.getItem(PKEY))||[]; }catch(e){ return []; } }
-function setPerfiles(l){ localStorage.setItem(PKEY, JSON.stringify(l)); }
+const PKEY='cmi_pie_perfiles_v3', VKEY_LEGACY='cmi_pie_franco_vault_v2', RKEY='cmi_pie_recursos_genericos';
+let PID=null, S=null, CK=null, SALT=null, cur='inicio', timer=null, DRAFT='', FILT={txt:'',tipo:'',mes:''}, FD='', FH='', ORDEN='codigo', FICHA=null, VERCONF=false, PRES=false, IMPQ=null, FICHA_SES=null;
+const MIN_INACTIVO=5*60*1000, PLAZO_DEFAULT_MESES=24;
+const TIPOS_NEE=['TEA','TDAH','Discapacidad Intelectual','Trastorno Específico del Lenguaje (TEL)','Discapacidad Auditiva','Discapacidad Visual','Disfasia','Funcionamiento Intelectual Limítrofe','Dificultades Específicas del Aprendizaje (DEA)','Trastorno de Déficit Atencional','Otra'];
+const TIPOS_ATENCION=['Intervención individual','Intervención grupal','Evaluación psicoeducativa','Entrevista familia','Coordinación docente','Observación de aula','Capacitación / Formación','Otra'];
+const DOMINIOS=['Aprendizaje','Comunicación y lenguaje','Atención y funciones ejecutivas','Relaciones con pares y adultos','Regulación emocional y conducta','Autonomía y vida diaria','Participación escolar'];
+const NIV_DIF=['0 Sin dificultad','1 Leve','2 Moderada','3 Severa','4 Muy severa'];
+const NIV_APO=['0 Ninguno','1 Puntual','2 Intermitente','3 Extenso','4 Permanente'];
+const ESTADOS_CASO=['Abierto','En seguimiento','Derivado','Cerrado'];
+const AREAS_META=['Lectura','Escritura','Matemática','Socioemocional','Autonomía','Comunicación','Conductual'];
+const RESP_META=['Psicólogo PIE','Educadora diferencial','Docente de aula','Familia','Fonoaudiólogo','Otro'];
+/* ===== utilidades ===== */
+function uid(){ return Date.now().toString(36)+Math.random().toString(36).slice(2,7); }
+function esc(s){ return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+function hoy(){ return new Date().toISOString().slice(0,10); }
+function mesActual(){ return hoy().slice(0,7); }
+function diasDesde(f){ return Math.floor((new Date(hoy())-new Date(f))/86400000); }
+function opts(arr,sel){ return arr.map(o=>`<option ${o===sel?'selected':''}>${esc(o)}</option>`).join(''); }
+function getPerfiles(){ try{return JSON.parse(localStorage.getItem(PKEY))||[];}catch(e){return [];} }
+function setPerfiles(l){ localStorage.setItem(PKEY,JSON.stringify(l)); }
 function perfilActual(){ return getPerfiles().find(p=>p.id===PID); }
-function vk(){ return (perfilActual()||{}).vk || VKEY_LEGACY; }
-function setHdr(){ const p=perfilActual(); document.getElementById('hdrSub').textContent = p ? p.nombre+(p.cargo?' · '+p.cargo:'') : 'CMI PIE'; }
-const TIPOS_NEE = ['TEA','TDAH','Discapacidad Intelectual','Trastorno Específico del Lenguaje (TEL)','Discapacidad Auditiva','Discapacidad Visual','Disfasia','Funcionamiento Intelectual Limítrofe','Dificultades Específicas del Aprendizaje (DEA)','Trastorno de Déficit Atencional','Otra'];
-const TIPOS_ATENCION = ['Intervención individual','Intervención grupal','Evaluación psicoeducativa','Entrevista familia','Coordinación docente','Observación de aula','Capacitación / Formación','Otra'];
-const MIN_INACTIVO = 5*60*1000;
-const enc = new TextEncoder();
-const dec = new TextDecoder();
-let S = null;      // datos en memoria (solo con la app desbloqueada)
-let CK = null;     // clave AES derivada del PIN (solo en memoria)
-let SALT = null;   // sala de derivación guardada en base64
-let cur = 'inicio';
-let timer = null;
-/* ================= CRIPTOGRAFÍA ================= */
-function b64(buf){
-  const bytes = new Uint8Array(buf); let s='';
-  for(let i=0;i<bytes.length;i++) s+=String.fromCharCode(bytes[i]);
-  return btoa(s);
+function vk(){ return (perfilActual()||{}).vk||VKEY_LEGACY; }
+function cfg(){ S.cfg=S.cfg||{nivel:'estandar',plazoMeses:PLAZO_DEFAULT_MESES}; return S.cfg; }
+function nivelOk(n){ const o={basico:0,estandar:1,completo:2}; return o[cfg().nivel]>=o[n]; }
+function addMeses(f,m){ if(!f) return ''; const d=new Date(f+'T00:00:00'); d.setMonth(d.getMonth()+m); return d.toISOString().slice(0,10); }
+function vencimientoEval(s){ return s.fechaReeval||(s.fechaEval?addMeses(s.fechaEval,cfg().plazoMeses):''); }
+function nombreEst(id){ const e=(S.students||[]).find(x=>x.id===id); return e?e.codigo:'—'; }
+function setHdr(){
+  const p=perfilActual();
+  document.getElementById('hdrSub').textContent=p?[p.nombre,p.cargo,p.establecimiento,p.anio?'Año '+p.anio:''].filter(Boolean).join(' · '):'CMI PIE';
+  document.body.classList.toggle('dark',!!(S&&S.cfg&&S.cfg.oscuro));
+  document.body.classList.toggle('ro',!!(S&&S.cfg&&S.cfg.soloLectura));
 }
-function unb64(str){ return Uint8Array.from(atob(str), c=>c.charCodeAt(0)); }
-async function deriveKey(pin, salt){
-  const base = await crypto.subtle.importKey('raw', enc.encode(pin), 'PBKDF2', false, ['deriveKey']);
-  return crypto.subtle.deriveKey(
-    {name:'PBKDF2', salt, iterations:200000, hash:'SHA-256'},
-    base, {name:'AES-GCM', length:256}, false, ['encrypt','decrypt']
-  );
+/* ===== criptografía ===== */
+const enc=new TextEncoder(), dec=new TextDecoder();
+function b64(buf){ const b=new Uint8Array(buf); let s=''; for(let i=0;i<b.length;i++) s+=String.fromCharCode(b[i]); return btoa(s); }
+function unb64(s){ return Uint8Array.from(atob(s),c=>c.charCodeAt(0)); }
+async function deriveKey(pin,salt){
+  const base=await crypto.subtle.importKey('raw',enc.encode(pin),'PBKDF2',false,['deriveKey']);
+  return crypto.subtle.deriveKey({name:'PBKDF2',salt,iterations:200000,hash:'SHA-256'},base,{name:'AES-GCM',length:256},false,['encrypt','decrypt']);
 }
-async function cifrar(clave, texto){
-  const iv = crypto.getRandomValues(new Uint8Array(12));
-  const ct = await crypto.subtle.encrypt({name:'AES-GCM', iv}, clave, enc.encode(texto));
-  return {iv:b64(iv), ct:b64(ct)};
-}
-async function descifrar(clave, ivB64, ctB64){
-  const pt = await crypto.subtle.decrypt({name:'AES-GCM', iv:unb64(ivB64)}, clave, unb64(ctB64));
-  return dec.decode(pt);
-}
+async function cifrar(clave,texto){ const iv=crypto.getRandomValues(new Uint8Array(12)); const ct=await crypto.subtle.encrypt({name:'AES-GCM',iv},clave,enc.encode(texto)); return {iv:b64(iv),ct:b64(ct)}; }
+async function descifrar(clave,ivB,ctB){ return dec.decode(await crypto.subtle.decrypt({name:'AES-GCM',iv:unb64(ivB)},clave,unb64(ctB))); }
 function pinValido(p){ return /^\d{6,12}$/.test(p); }
-async function guardar(){
-  const c = await cifrar(CK, JSON.stringify(S));
-  localStorage.setItem(vk(), JSON.stringify({v:2, salt:SALT, iv:c.iv, ct:c.ct}));
-}
+async function guardar(){ const c=await cifrar(CK,JSON.stringify(S)); localStorage.setItem(vk(),JSON.stringify({v:2,salt:SALT,iv:c.iv,ct:c.ct})); }
 function save(){ guardar().catch(()=>alert('No se pudo guardar de forma cifrada.')); }
-/* ================= ACCESO, PIN Y BLOQUEO ================= */
+/* ===== acceso, perfiles, PIN ===== */
 function boot(){
-  if(!localStorage.getItem(PKEY) && localStorage.getItem(VKEY_LEGACY)){
-    setPerfiles([{id:'franco',nombre:'Franco Espinoza Aparicio',cargo:'Psicólogo PIE',vk:VKEY_LEGACY,fallos:0,bloqueadoHasta:0}]);
-  }
+  if(!localStorage.getItem(PKEY)&&localStorage.getItem(VKEY_LEGACY)) setPerfiles([{id:'franco',nombre:'Franco Espinoza Aparicio',cargo:'Psicólogo PIE',vk:VKEY_LEGACY,fallos:0,bloqueadoHasta:0}]);
   const l=getPerfiles();
   if(!l.length){ showSetup(); return; }
   if(l.length===1){ PID=l[0].id; showLock(); return; }
@@ -116,73 +129,61 @@ function boot(){
 }
 function renderNav(on){
   setHdr();
-  const nav = document.getElementById('nav');
-  nav.innerHTML = on ? Object.keys(vistas).map(k=>
-    `<button class="${k===cur?'act':''}" onclick="go('${k}')">${vistas[k].i}<br>${vistas[k].t}</button>`).join('') : '';
+  document.getElementById('fab').style.display=on?'block':'none';
+  document.getElementById('nav').innerHTML=on?Object.keys(vistas).map(k=>`<button class="${k===cur?'act':''}" onclick="go('${k}')">${vistas[k].i}<br>${vistas[k].t}</button>`).join(''):'';
 }
 function showSetup(){
   S=null; CK=null; renderNav(false);
-  document.getElementById('app').innerHTML = `
-  <div class="card">
-    <h2>Nuevo perfil</h2>
+  document.getElementById('app').innerHTML=`<div class="card"><h2>Nuevo perfil</h2>
     <input id="pNom" placeholder="Nombre (ej. Ana Pérez)">
     <input id="pCar" placeholder="Cargo (ej. Psicóloga PIE)">
-    <p class="meta">PIN de este perfil:</p>
+    <input id="pEst" placeholder="Establecimiento (opcional)">
+    <input id="pAnio" placeholder="Año escolar (ej. 2026)">
     <p class="meta">El PIN abre la app y cifra tus datos en este equipo. Si lo olvidas, los datos no se pueden recuperar, por eso conviene hacer respaldos cifrados.</p>
     <input id="pin1" type="password" inputmode="numeric" maxlength="12" placeholder="PIN (6 a 12 números)">
     <input id="pin2" type="password" inputmode="numeric" maxlength="12" placeholder="Repite el PIN">
     <p class="err" id="pinErr"></p>
-    <button class="btn" onclick="crearPin()">Crear PIN y comenzar</button>
-  </div>`;
+    <button class="btn" onclick="crearPin()">Crear PIN y comenzar</button></div>`;
 }
 async function crearPin(){
-  const p1 = document.getElementById('pin1').value;
-  const p2 = document.getElementById('pin2').value;
-  const err = document.getElementById('pinErr');
+  const p1=document.getElementById('pin1').value, p2=document.getElementById('pin2').value, err=document.getElementById('pinErr');
   if(!pinValido(p1)){ err.textContent='El PIN debe tener entre 6 y 12 números.'; return; }
   if(p1!==p2){ err.textContent='Los PIN no coinciden.'; return; }
-  const salt = crypto.getRandomValues(new Uint8Array(16));
-  SALT = b64(salt);
-  CK = await deriveKey(p1, salt);
-  const nom=(document.getElementById('pNom').value||'').trim()||'Sin nombre';
-  const car=(document.getElementById('pCar').value||'').trim();
-  const id=uid();
-  const lista=getPerfiles();
-  lista.push({id,nombre:nom,cargo:car,vk:'cmi_pie_vault_'+id,fallos:0,bloqueadoHasta:0});
+  const salt=crypto.getRandomValues(new Uint8Array(16));
+  SALT=b64(salt); CK=await deriveKey(p1,salt);
+  const id=uid(), lista=getPerfiles();
+  lista.push({id,nombre:(document.getElementById('pNom').value||'').trim()||'Sin nombre',cargo:document.getElementById('pCar').value.trim(),establecimiento:document.getElementById('pEst').value.trim(),anio:document.getElementById('pAnio').value.trim(),vk:'cmi_pie_vault_'+id,fallos:0,bloqueadoHasta:0});
   setPerfiles(lista); PID=id;
-  S = {students:[],sessions:[],goals:[],meetings:[],tasks:[],formacion:0};
-  await guardar();
-  iniciarSesion();
+  S={students:[],sessions:[],goals:[],meetings:[],tasks:[],cases:[],plan:[],formacion:0,cfg:{nivel:'estandar',plazoMeses:PLAZO_DEFAULT_MESES}};
+  await guardar(); iniciarSesion();
 }
 function showPerfiles(){
   S=null; CK=null; PID=null; clearTimeout(timer); renderNav(false);
   const l=getPerfiles();
-  document.getElementById('app').innerHTML = `
-  <div class="card">
-    <h2>Perfiles</h2>
+  document.getElementById('app').innerHTML=`<div class="card"><h2>Perfiles</h2>
     <p class="meta">Cada perfil tiene su propio PIN y sus datos cifrados.</p>
     ${l.map(p=>`<div class="item"><button class="btn" onclick="elegirPerfil('${p.id}')">${esc(p.nombre)}${p.cargo?' · '+esc(p.cargo):''}</button><button class="mini" onclick="editarPerfil('${p.id}')">Editar</button><button class="del" onclick="eliminarPerfil('${p.id}')">Eliminar</button></div>`).join('')}
     <button class="btn sec" onclick="showSetup()">+ Nuevo perfil</button>
-  </div>`;
+    <button class="btn sec" onclick="importarPerfil()">Importar perfil desde otro equipo</button></div>`;
 }
 function elegirPerfil(id){ PID=id; showLock(); }
 function editarPerfil(id){
-  const l=getPerfiles(); const p=l.find(x=>x.id===id); if(!p) return;
+  const l=getPerfiles(), p=l.find(x=>x.id===id); if(!p) return;
   const n=prompt('Nombre del perfil:',p.nombre); if(n===null) return;
   const c=prompt('Cargo:',p.cargo||''); if(c===null) return;
-  p.nombre=n.trim()||p.nombre; p.cargo=c.trim(); setPerfiles(l); showPerfiles();
+  const e=prompt('Establecimiento (opcional):',p.establecimiento||''); if(e===null) return;
+  const a=prompt('Año escolar:',p.anio||''); if(a===null) return;
+  p.nombre=n.trim()||p.nombre; p.cargo=c.trim(); p.establecimiento=e.trim(); p.anio=a.trim();
+  setPerfiles(l); showPerfiles();
 }
 async function eliminarPerfil(id){
   const p=getPerfiles().find(x=>x.id===id); if(!p) return;
   const pin=prompt('Para eliminar "'+p.nombre+'" ingresa su PIN:'); if(pin===null) return;
-  try{
-    const v=JSON.parse(localStorage.getItem(p.vk));
-    if(v){ const clave=await deriveKey(pin, unb64(v.salt)); await descifrar(clave,v.iv,v.ct); }
-  }catch(e){ alert('PIN incorrecto.'); return; }
+  try{ const v=JSON.parse(localStorage.getItem(p.vk)); if(v){ const k=await deriveKey(pin,unb64(v.salt)); await descifrar(k,v.iv,v.ct); } }
+  catch(e){ alert('PIN incorrecto.'); return; }
   if(!confirm('Esta acción borra todos los datos de este perfil y no se puede deshacer. ¿Continuar?')) return;
-  localStorage.removeItem(p.vk);
-  setPerfiles(getPerfiles().filter(x=>x.id!==id));
-  showPerfiles();
+  localStorage.removeItem(p.vk); localStorage.removeItem(p.vk+'_prev');
+  setPerfiles(getPerfiles().filter(x=>x.id!==id)); showPerfiles();
 }
 function olvidePin(){
   const inp=document.createElement('input'); inp.type='file'; inp.accept='application/json';
@@ -192,216 +193,220 @@ function olvidePin(){
       const obj=JSON.parse(await f.text());
       if(obj.formato!=='cmi-pie-respaldo') throw new Error('formato');
       const pw=prompt('Contraseña de ese respaldo:'); if(pw===null) return;
-      const clave0=await deriveKey(pw, unb64(obj.salt));
-      const datos=JSON.parse(await descifrar(clave0,obj.iv,obj.ct));
+      const datos=JSON.parse(await descifrar(await deriveKey(pw,unb64(obj.salt)),obj.iv,obj.ct));
       const p1=prompt('Nuevo PIN para este perfil (6 a 12 números):'); if(p1===null) return;
       if(!pinValido(p1)){ alert('El PIN debe tener entre 6 y 12 números.'); return; }
       const p2=prompt('Repite el nuevo PIN:'); if(p1!==p2){ alert('Los PIN no coinciden.'); return; }
       const salt=crypto.getRandomValues(new Uint8Array(16));
       SALT=b64(salt); CK=await deriveKey(p1,salt);
-      S={students:[],sessions:[],goals:[],meetings:[],tasks:[],formacion:0,...datos};
-      await guardar();
-      S=null; CK=null;
-      alert('PIN restablecido. Ingresa con el nuevo PIN.');
-      showLock();
+      S={students:[],sessions:[],goals:[],meetings:[],tasks:[],cases:[],plan:[],formacion:0,...datos};
+      await guardar(); S=null; CK=null;
+      alert('PIN restablecido. Ingresa con el nuevo PIN.'); showLock();
     }catch(e){ alert('No se pudo restablecer: respaldo no válido o contraseña incorrecta.'); }
   };
   inp.click();
 }
 function cambiarPerfil(){ showPerfiles(); }
 function showLock(){
-  S=null; CK=null; clearTimeout(timer); renderNav(false);
-  document.getElementById('app').innerHTML = `
-  <div class="card">
-    <h2>App bloqueada</h2>
+  S=null; CK=null; DRAFT=''; clearTimeout(timer); renderNav(false);
+  document.getElementById('app').innerHTML=`<div class="card"><h2>App bloqueada</h2>
     <p class="meta">Ingresa el PIN de este perfil.</p>
     <button class="btn sec" onclick="showPerfiles()">Cambiar perfil</button>
     <button class="mini" onclick="olvidePin()">¿Olvidaste el PIN? Restablecer con respaldo</button>
     <input id="pin" type="password" inputmode="numeric" maxlength="12" placeholder="PIN" onkeydown="if(event.key==='Enter')desbloquear()">
     <button class="btn" onclick="desbloquear()">Desbloquear</button>
-    <p class="err" id="pinErr"></p>
-  </div>`;
+    <p class="err" id="pinErr"></p></div>`;
 }
 async function desbloquear(){
-  const pin = document.getElementById('pin').value;
-  const err = document.getElementById('pinErr');
+  const pin=document.getElementById('pin').value, err=document.getElementById('pinErr');
   if(!pinValido(pin)){ err.textContent='El PIN debe tener entre 6 y 12 números.'; return; }
   try{
-    const pf = perfilActual();
-    if(pf && pf.bloqueadoHasta>Date.now()){ err.textContent='Espera '+Math.ceil((pf.bloqueadoHasta-Date.now())/1000)+' s antes de reintentar.'; return; }
-    const v = JSON.parse(localStorage.getItem(vk()));
-    const clave = await deriveKey(pin, unb64(v.salt));
-    const texto = await descifrar(clave, v.iv, v.ct);
-    S = JSON.parse(texto);
-    CK = clave; SALT = v.salt;
-    const lp=getPerfiles(); const qp=lp.find(x=>x.id===PID); if(qp){ qp.fallos=0; qp.bloqueadoHasta=0; setPerfiles(lp); }
+    const pf=perfilActual();
+    if(pf&&pf.bloqueadoHasta>Date.now()){ err.textContent='Espera '+Math.ceil((pf.bloqueadoHasta-Date.now())/1000)+' s antes de reintentar.'; return; }
+    const v=JSON.parse(localStorage.getItem(vk()));
+    const clave=await deriveKey(pin,unb64(v.salt));
+    S=JSON.parse(await descifrar(clave,v.iv,v.ct)); CK=clave; SALT=v.salt;
+    const lp=getPerfiles(), qp=lp.find(x=>x.id===PID); if(qp){ qp.fallos=0; qp.bloqueadoHasta=0; setPerfiles(lp); }
     iniciarSesion();
   }catch(e){
-    const lp=getPerfiles(); const qp=lp.find(x=>x.id===PID);
-    if(qp){ qp.fallos=(qp.fallos||0)+1; if(qp.fallos>=5){ qp.bloqueadoHasta=Date.now()+Math.min(600,30*(qp.fallos-4))*1000; } setPerfiles(lp); }
+    const lp=getPerfiles(), qp=lp.find(x=>x.id===PID);
+    if(qp){ qp.fallos=(qp.fallos||0)+1; if(qp.fallos>=5) qp.bloqueadoHasta=Date.now()+Math.min(600,30*(qp.fallos-4))*1000; setPerfiles(lp); }
     err.textContent='PIN incorrecto.'+(qp&&qp.fallos>=5?' Espera antes de reintentar.':'');
   }
 }
-function iniciarSesion(){
-  registrar('Acceso a la app'); cur='inicio'; render(); resetTimer();
-}
+function iniciarSesion(){ registrar('Acceso a la app'); cur='inicio'; render(); resetTimer(); chequearNotif(); }
 function bloquear(){ showLock(); }
-function resetTimer(){
-  clearTimeout(timer);
-  if(CK) timer = setTimeout(bloquear, MIN_INACTIVO);
-}
-['pointerdown','keydown'].forEach(ev=>document.addEventListener(ev, resetTimer));
+function resetTimer(){ clearTimeout(timer); if(CK) timer=setTimeout(bloquear,MIN_INACTIVO); }
+['pointerdown','keydown'].forEach(ev=>document.addEventListener(ev,resetTimer));
 async function cambiarPin(){
   if(!CK) return;
-  const p1 = prompt('Nuevo PIN (6 a 12 números):');
-  if(p1===null) return;
+  const p1=prompt('Nuevo PIN (6 a 12 números):'); if(p1===null) return;
   if(!pinValido(p1)){ alert('El PIN debe tener entre 6 y 12 números.'); return; }
-  const p2 = prompt('Repite el nuevo PIN:');
-  if(p1!==p2){ alert('Los PIN no coinciden.'); return; }
-  const salt = crypto.getRandomValues(new Uint8Array(16));
-  SALT = b64(salt);
-  CK = await deriveKey(p1, salt);
-  await guardar();
-  alert('PIN cambiado correctamente.');
+  const p2=prompt('Repite el nuevo PIN:'); if(p1!==p2){ alert('Los PIN no coinciden.'); return; }
+  const salt=crypto.getRandomValues(new Uint8Array(16)); SALT=b64(salt); CK=await deriveKey(p1,salt);
+  await guardar(); alert('PIN cambiado correctamente.');
 }
-/* ================= NAVEGACIÓN Y CMI ================= */
-let _dummy = null;
-function load(){ return S; }
-function uid(){ return Date.now().toString(36)+Math.random().toString(36).slice(2,7); }
-function esc(s){ return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
-function hoy(){ return new Date().toISOString().slice(0,10); }
-function mesActual(){ return hoy().slice(0,7); }
-function diasDesde(f){ return Math.floor((new Date(hoy()) - new Date(f))/86400000); }
-function nombreEst(id){ const e=S.students.find(x=>x.id===id); return e? e.codigo : '—'; }
-function opts(arr, sel){ return arr.map(o=>`<option ${o===sel?'selected':''}>${esc(o)}</option>`).join(''); }
-function studentOpts(sel){ return S.students.map(s=>`<option value="${s.id}" ${s.id===sel?'selected':''}>${esc(s.codigo)} - ${esc(s.nee)}</option>`).join(''); }
-const vistas = {
-  inicio:{t:'Inicio',i:'📊'},
-  estudiantes:{t:'Estudiantes',i:'👦'},
-  atenciones:{t:'Atenciones',i:'📝'},
-  planes:{t:'Planes',i:'🎯'},
-  familias:{t:'Familias',i:'👪'},
-  tareas:{t:'Tareas',i:'✅'},
-  casos:{t:'Casos',i:'🧭'},
-  informes:{t:'Informes',i:'📄'},
-  respaldo:{t:'Respaldo',i:'💾'}
-};
+/* ===== navegación ===== */
+const vistas={inicio:{t:'Inicio',i:'📊'},estudiantes:{t:'Estudiantes',i:'👦'},atenciones:{t:'Atenciones',i:'📝'},planes:{t:'Metas',i:'🎯'},familias:{t:'Familias',i:'👪'},tareas:{t:'Tareas',i:'✅'},casos:{t:'Casos',i:'🧭'},informes:{t:'Informes',i:'📄'},planif:{t:'Plan',i:'🗓️'},respaldo:{t:'Ajustes',i:'⚙️'}};
+const FN={inicio:vInicio,estudiantes:vEst,atenciones:vAt,planes:vPlanes,familias:vFam,tareas:vTar,casos:vCasos,informes:vInf,planif:vPlanif,respaldo:vRes,ficha:vFicha,infest:vInfEst};
 function render(){
   if(!S) return;
   renderNav(true);
-  const fn = {inicio:vInicio,estudiantes:vEst,atenciones:vAt,planes:vPlanes,familias:vFam,tareas:vTar,respaldo:vRes,ficha:vFicha,casos:vCasos,informes:vInf}[cur];
-  document.getElementById('app').innerHTML = fn();
+  document.getElementById('app').innerHTML=(FN[cur]||vInicio)();
 }
-function go(v){ cur=v; render(); window.scrollTo(0,0); resetTimer(); }
+function go(v,push=true){
+  cur=v; if(push&&history.pushState) history.pushState({v},'');
+  render(); window.scrollTo(0,0); resetTimer();
+}
+window.addEventListener('popstate',()=>{ if(S&&cur!=='inicio'){ cur='inicio'; render(); } });
+function nuevaAtencion(){ if(!S) return; go('atenciones'); setTimeout(()=>{const el=document.getElementById('a_desc'); if(el) el.focus();},60); }
+/* ===== notificaciones (solo con la app abierta) ===== */
+function alertasCount(){ return S?contarAlertas().length:0; }
+function activarNotif(){
+  if(!('Notification' in window)){ alert('Este navegador no admite notificaciones.'); return; }
+  Notification.requestPermission().then(p=>alert(p==='granted'?'Notificaciones activadas.':'Notificaciones no permitidas.'));
+}
+function chequearNotif(){
+  if(!('Notification' in window)||Notification.permission!=='granted') return;
+  const a=contarAlertas(); if(a.length) new Notification('CMI PIE',{body:a.length+' alerta(s) pendiente(s)'});
+}
+/* ===== alertas e inicio ===== */
+function contarAlertas(){
+  const a=[], activos=S.students.filter(s=>s.estado==='Activo');
+  const vencidas=S.tasks.filter(t=>!t.done&&t.vence&&t.vence<hoy()).length;
+  if(vencidas) a.push(vencidas+' tarea(s) vencida(s)');
+  const lim30=new Date(Date.now()+30*86400000).toISOString().slice(0,10);
+  const reev=activos.filter(s=>{const v=vencimientoEval(s); return v&&v>=hoy()&&v<=lim30;});
+  if(reev.length) a.push(reev.length+' evaluación(es) vencen en 30 días');
+  const metasVenc=S.goals.filter(g=>g.plazo&&g.plazo<hoy()&&g.progreso<100).length;
+  if(metasVenc) a.push(metasVenc+' meta(s) con plazo vencido');
+  const sinAt=activos.filter(s=>!ultimaAt(s.id)||diasDesde(ultimaAt(s.id))>30);
+  if(sinAt.length) a.push(sinAt.length+' estudiante(s) sin atención hace más de 30 días');
+  const chkInc=activos.filter(s=>!checkOk(s)).length;
+  if(chkInc) a.push(chkInc+' estudiante(s) con checklist normativo incompleto');
+  const casos=(S.cases||[]).filter(c=>c.riesgo&&c.estado!=='Cerrado').length;
+  if(casos) a.push(casos+' caso(s) de riesgo abiertos');
+  const rp=cfg().ultimoRespaldo; if(!rp||diasDesde(rp)>14) a.push('Recuerda hacer un respaldo cifrado (hace más de 14 días)');
+  return a;
+}
+function ultimaAt(sid){ const u=S.sessions.filter(x=>x.estudiante===sid).sort((a,b)=>b.fecha.localeCompare(a.fecha))[0]; return u?u.fecha:''; }
+function checkOk(s){ const c=s.chk||{}; return !!(c.eval&&c.inf&&c.cons&&c.reun); }
+function buscarGlobal(q){
+  q=(q||'').trim().toLowerCase(); const el=document.getElementById('res');
+  if(!el) return;
+  if(!q){ el.innerHTML=''; return; }
+  const ests=S.students.filter(s=>(s.codigo+' '+s.curso+' '+s.nee).toLowerCase().includes(q)).slice(0,8);
+  const ats=S.sessions.filter(s=>(nombreEst(s.estudiante)+' '+s.tipo+' '+s.desc).toLowerCase().includes(q)).slice(0,8);
+  el.innerHTML=(ests.map(s=>`<div class="item"><button class="mini" onclick="verFicha('${s.id}')">Ficha</button> <b>${esc(s.codigo)}</b> <span class="meta">${esc(s.curso)} · ${esc(s.nee)}</span></div>`).join('')
+    +ats.map(a=>`<div class="item"><span class="meta">${esc(a.fecha)} · ${esc(nombreEst(a.estudiante))} · ${esc(a.tipo)}</span><br><span class="sens">${esc(a.desc)}</span></div>`).join(''))||'<p class="empty">Sin resultados.</p>';
+}
 function vInicio(){
-  const activos = S.students.filter(s=>s.estado==='Activo');
-  const atMes = S.sessions.filter(s=>s.fecha.startsWith(mesActual()));
-  const conNotas = S.sessions.filter(s=>s.desc && s.desc.trim().length>10).length;
-  const pctNotas = S.sessions.length? Math.round(conNotas/S.sessions.length*100):0;
-  const metas = S.goals;
-  const avgMetas = metas.length? Math.round(metas.reduce((a,g)=>a+g.progreso,0)/metas.length):0;
-  const metasLogradas = metas.filter(g=>g.progreso>=100).length;
-  const reun = S.meetings;
-  const reunRealizadas = reun.filter(r=>r.estado==='Realizada').length;
-  const pctReun = reun.length? Math.round(reunRealizadas/reun.length*100):0;
-  const tareas = S.tasks;
-  const tHechas = tareas.filter(t=>t.done).length;
-  const pctTareas = tareas.length? Math.round(tHechas/tareas.length*100):0;
-  const sinAtencion = activos.filter(s=>{
-    const u = S.sessions.filter(x=>x.estudiante===s.id).sort((a,b)=>b.fecha.localeCompare(a.fecha))[0];
-    return !u || diasDesde(u.fecha)>30;
-  });
-  const formacion = S.sessions.filter(s=>s.tipo==='Capacitación / Formación').reduce((a,s)=>a+(+s.duracion||0),0)/60;
-  const vencidas = S.tasks.filter(t=>!t.done && t.vence && t.vence<hoy()).length;
-  const lim30 = new Date(Date.now()+30*86400000).toISOString().slice(0,10);
-  const reevalProx = activos.filter(s=>s.fechaReeval && s.fechaReeval>=hoy() && s.fechaReeval<=lim30);
-  const metasVenc = S.goals.filter(g=>g.plazo && g.plazo<hoy() && g.progreso<100).length;
-  const reunPend = S.meetings.filter(r=>r.estado==='Programada' && r.fecha>=hoy()).length;
-  const alertas = [];
-  if(vencidas) alertas.push(`${vencidas} tarea(s) vencida(s)`);
-  if(reevalProx.length) alertas.push(`${reevalProx.length} reevaluación(es) en los próximos 30 días`);
-  if(metasVenc) alertas.push(`${metasVenc} meta(s) con plazo vencido`);
-  if(sinAtencion.length) alertas.push(`${sinAtencion.length} estudiante(s) sin atención hace más de 30 días`);
-  if(reunPend) alertas.push(`${reunPend} reunión(es) programada(s)`);
-  const casosRiesgo=(S.cases||[]).filter(c=>c.riesgo&&c.estado!=='Cerrado').length;
-  if(casosRiesgo) alertas.push(`${casosRiesgo} caso(s) de riesgo abiertos`);
-  const h = new Date().getHours();
-  const saludo = h<12?'Buenos días':h<20?'Buenas tardes':'Buenas noches';
-  const fechaTxt = new Date().toLocaleDateString('es-CL',{weekday:'long',day:'numeric',month:'long'});
+  const activos=S.students.filter(s=>s.estado==='Activo');
+  const atMes=S.sessions.filter(s=>s.fecha.startsWith(mesActual()));
+  const avgMetas=S.goals.length?Math.round(S.goals.reduce((a,g)=>a+g.progreso,0)/S.goals.length):0;
+  const metasLogradas=S.goals.filter(g=>g.progreso>=100).length;
+  const reunRe=S.meetings.filter(r=>r.estado==='Realizada').length;
+  const pctReun=S.meetings.length?Math.round(reunRe/S.meetings.length*100):0;
+  const tHechas=S.tasks.filter(t=>t.done).length;
+  const pctTareas=S.tasks.length?Math.round(tHechas/S.tasks.length*100):0;
+  const conNotas=S.sessions.filter(s=>s.desc&&s.desc.trim().length>10).length;
+  const pctNotas=S.sessions.length?Math.round(conNotas/S.sessions.length*100):0;
+  const sinAt=activos.filter(s=>!ultimaAt(s.id)||diasDesde(ultimaAt(s.id))>30);
+  const formacion=S.sessions.filter(s=>s.tipo==='Capacitación / Formación').reduce((a,s)=>a+(+s.duracion||0),0)/60;
+  const alertas=contarAlertas();
+  const h=new Date().getHours(), saludo=h<12?'Buenos días':h<20?'Buenas tardes':'Buenas noches';
+  const fechaTxt=new Date().toLocaleDateString('es-CL',{weekday:'long',day:'numeric',month:'long'});
+  const p=perfilActual()||{nombre:''};
   return `
   <div class="card" style="background:linear-gradient(135deg,#1e3a5f,#2d5a8c);color:#fff;border:0">
     <div style="font-size:13px;opacity:.85">${saludo}</div>
-    <div style="font-size:19px;font-weight:700">Hola, ${esc((perfilActual()||{nombre:''}).nombre.split(' ')[0])}</div>
+    <div style="font-size:19px;font-weight:700">Hola, ${esc(p.nombre.split(' ')[0])}</div>
     <div style="font-size:13px;margin-top:4px;opacity:.9;text-transform:capitalize">${fechaTxt}</div>
   </div>
-  <div class="card" style="border-left:4px solid #c9a227">
-    <h3>Alertas del día</h3>
-    ${alertas.length? alertas.map(a=>`<p style="margin:5px 0;font-size:14px">• ${esc(a)}</p>`).join('') : '<p class="empty">Sin alertas pendientes ✔</p>'}
-  </div>
+  <div class="card"><input class="permite" placeholder="Buscar estudiante, atención o texto" oninput="buscarGlobal(this.value)"><div id="res"></div></div>
+  <div class="card" style="border-left:4px solid #c9a227"><h3>Alertas del día</h3>
+    ${alertas.length?alertas.map(a=>`<p style="margin:5px 0;font-size:14px">• ${esc(a)}</p>`).join(''):'<p class="empty">Sin alertas pendientes ✔</p>'}
+    <button class="mini" onclick="activarNotif()">Activar notificaciones</button></div>
   <div class="kpis">
     <div class="kpi"><b>${activos.length}</b><span>Estudiantes PIE activos</span></div>
     <div class="kpi"><b>${atMes.length}</b><span>Atenciones este mes</span></div>
     <div class="kpi"><b>${avgMetas}%</b><span>Avance promedio de metas</span></div>
-    <div class="kpi"><b>${vencidas}</b><span>Tareas vencidas</span></div>
+    <div class="kpi"><b>${S.tasks.filter(t=>!t.done&&t.vence&&t.vence<hoy()).length}</b><span>Tareas vencidas</span></div>
   </div>
   <h2>Cuadro de Mando Integral</h2>
-  <div class="card persp">
-    <h3>1. Perspectiva Estudiantes (impacto)</h3>
-    <p>Metas logradas: <b>${metasLogradas}</b> de ${metas.length}</p>
-    <p>Avance promedio de planes:</p>
+  <div class="card persp"><h3>1. Estudiantes (impacto)</h3>
+    <p>Metas logradas: <b>${metasLogradas}</b> de ${S.goals.length}</p>
     <div class="bar"><div style="width:${avgMetas}%"></div></div>
-    <p class="meta">Meta sugerida: ≥ 70% de avance promedio al cierre de semestre.</p>
-  </div>
-  <div class="card persp">
-    <h3>2. Procesos internos (gestión)</h3>
+    <p class="meta">Meta sugerida: ≥ 70% de avance al cierre de semestre.</p></div>
+  <div class="card persp"><h3>2. Procesos internos</h3>
     <p>Atenciones registradas: <b>${S.sessions.length}</b></p>
-    <p>Atenciones con descripción completa: <b>${pctNotas}%</b></p>
-    <p>Estudiantes activos sin atención en 30 días: <b class="${sinAtencion.length?'late':''}">${sinAtencion.length}</b></p>
-    ${sinAtencion.length? '<p class="meta">'+sinAtencion.slice(0,8).map(s=>esc(s.codigo)).join(', ')+'</p>':''}
-  </div>
-  <div class="card persp">
-    <h3>3. Familias y comunidad</h3>
-    <p>Reuniones realizadas: <b>${reunRealizadas}</b> de ${reun.length}</p>
-    <div class="bar"><div style="width:${pctReun}%"></div></div>
-    <p class="meta">Meta sugerida: al menos una reunión por semestre con cada familia.</p>
-  </div>
-  <div class="card persp">
-    <h3>4. Aprendizaje y desarrollo profesional</h3>
-    <p>Horas de formación registradas: <b>${formacion.toFixed(1)}</b></p>
-    <p>Tareas de gestión completadas: <b>${pctTareas}%</b></p>
-    <div class="bar"><div style="width:${pctTareas}%"></div></div>
-  </div>
-  `;
+    <p>Con descripción completa: <b>${pctNotas}%</b></p>
+    <p>Activos sin atención en 30 días: <b class="${sinAt.length?'late':''}">${sinAt.length}</b></p>
+    <p>Checklist normativo completo: <b>${activos.filter(checkOk).length}</b> de ${activos.length}</p></div>
+  <div class="card persp"><h3>3. Familias y comunidad</h3>
+    <p>Reuniones realizadas: <b>${reunRe}</b> de ${S.meetings.length}</p>
+    <div class="bar"><div style="width:${pctReun}%"></div></div></div>
+  <div class="card persp"><h3>4. Aprendizaje y desarrollo profesional</h3>
+    <p>Horas de formación: <b>${formacion.toFixed(1)}</b></p>
+    <p>Tareas completadas: <b>${pctTareas}%</b></p>
+    <div class="bar"><div style="width:${pctTareas}%"></div></div></div>`;
 }
-/* ================= ESTUDIANTES ================= */
+/* ===== semáforo y checklist ===== */
+function semaforo(s){
+  const venc=vencimientoEval(s);
+  if(!venc) return '<span class="tag warn">Sin fecha de evaluación</span>';
+  const d=Math.ceil((new Date(venc)-new Date(hoy()))/86400000);
+  const rojo='background:#fee2e2;color:#b91c1c';
+  if(d<0) return '<span class="tag" style="'+rojo+'">Vencida</span>';
+  if(d<=7) return '<span class="tag" style="'+rojo+'">Vence en '+d+' d (alerta 7)</span>';
+  if(d<=30) return '<span class="tag warn">Vence en '+d+' d (alerta 30)</span>';
+  if(d<=60) return '<span class="tag" style="background:#fef9c3;color:#854d0e">Vence en '+d+' d (alerta 60)</span>';
+  return '<span class="tag ok">Vigente ('+d+' d)</span>';
+}
+function vChecklist(s){
+  const c=s.chk||{}, inf=c.inf?` (${esc(c.infFecha||'sin fecha')} → ${esc(c.infDest||'sin destinatario')})`:'';
+  const item=(k,txt)=>`<div class="item"><label><input type="checkbox" ${c[k]?'checked':''} onchange="chkToggle('${s.id}','${k}')"> ${txt}</label></div>`;
+  return `<div class="card"><h3>Checklist normativo ${checkOk(s)?'<span class="tag ok">Completo</span>':'<span class="tag warn">Incompleto</span>'}</h3>
+  ${item('eval','Evaluación psicoeducativa realizada')}
+  ${item('inf','Informe psicoeducativo entregado'+inf)}
+  ${item('cons','Consentimiento firmado por apoderado')}
+  ${item('reun','Reunión con apoderado realizada')}</div>`;
+}
+function chkToggle(sid,k){
+  const s=S.students.find(x=>x.id===sid); s.chk=s.chk||{};
+  if(k==='inf'&&!s.chk.inf){
+    const f=prompt('Fecha de entrega del informe (AAAA-MM-DD):',hoy()); if(f===null) return;
+    const d=prompt('Destinatario (ej. familia, UTP, dirección):',''); if(d===null) return;
+    s.chk.infFecha=f.trim(); s.chk.infDest=d.trim(); s.chk.inf=true;
+  } else if(k==='inf'){ s.chk.inf=false; }
+  else s.chk[k]=!s.chk[k];
+  save(); render();
+}
+/* ===== estudiantes ===== */
+let ORD_LISTA=(a,b)=>a.codigo.localeCompare(b.codigo);
 function vEst(){
-  const lista = S.students.map(s=>`
-    <div class="item">
-      <b>${esc(s.codigo)}</b> <span class="tag">${esc(s.curso)}</span>
+  const ord=ORDEN==='curso'?(a,b)=>(a.curso||'').localeCompare(b.curso||''):ORD_LISTA;
+  const lista=[...S.students].sort(ord).map(s=>`
+    <div class="item"><b>${esc(s.codigo)}</b> <span class="tag">${esc(s.curso)}</span>
       <span class="tag ${s.estado==='Activo'?'ok':'warn'}">${esc(s.estado)}</span><br>
-      <span class="meta">${esc(s.nee)} · Evaluado: ${esc(s.fechaEval||'—')} · Reevaluación: ${esc(s.fechaReeval||'—')}</span> ${semaforo(s)}<br>
-      <span class="meta sens">${esc(s.obs)}</span>
+      <span class="meta">${esc(s.nee)} · Evaluado: ${esc(s.fechaEval||'—')} · Reevaluación: ${esc(s.fechaReeval||'—')}</span> ${semaforo(s)}
       <div style="margin-top:4px">
         <button class="mini" onclick="verFicha('${s.id}')">Ficha</button>
         <button class="mini" onclick="cambiarEstado('${s.id}')">Cambiar estado</button>
         <button class="del" onclick="borrar('students','${s.id}')">Eliminar</button>
-      </div>
-    </div>`).join('') || '<p class="empty">Sin estudiantes registrados.</p>';
+      </div></div>`).join('')||'<p class="empty">Sin estudiantes registrados.</p>';
   return `
   <h2>Estudiantes PIE</h2>
   <div class="card">
+    <select onchange="ORDEN=this.value;render()"><option value="codigo" ${ORDEN==='codigo'?'selected':''}>Ordenar por código</option><option value="curso" ${ORDEN==='curso'?'selected':''}>Ordenar por curso</option></select>
+  </div>
+  <div class="card">
     <h3>Nuevo estudiante</h3>
-    <p class="meta">Usa código o iniciales, no nombres completos (protección de datos personales).</p>
+    <p class="meta">Usa código o iniciales, no nombres completos.</p>
     <input id="e_cod" placeholder="Código o iniciales (ej: M.G.R.)">
-    <div class="row">
-      <input id="e_curso" placeholder="Curso (ej: 3° Básico B)">
-      <select id="e_estado"><option>Activo</option><option>Egresado</option><option>Retirado</option></select>
-    </div>
-    <select id="e_nee">${opts(TIPOS_NEE)}</select>
-    <div class="row">
-      <div><small class="meta">Fecha evaluación</small><input type="date" id="e_fe"></div>
-      <div><small class="meta">Fecha reevaluación</small><input type="date" id="e_fr"></div>
-    </div>
+    <div class="row"><input id="e_curso" placeholder="Curso (ej: 3° Básico B)"><select id="e_estado"><option>Activo</option><option>Egresado</option><option>Retirado</option></select></div>
+    <select id="e_nee">${opts(TIPOS_NEE,'')}</select>
+    <div class="row"><div><small class="meta">Fecha evaluación</small><input type="date" id="e_fe"></div><div><small class="meta">Fecha reevaluación</small><input type="date" id="e_fr"></div></div>
     <textarea id="e_obs" rows="2" placeholder="Observaciones generales"></textarea>
     <input id="e_prof" placeholder="Profesional que evaluó">
     <input id="e_inst" placeholder="Instrumentos, versión y fecha (ej: WISC-V, ENI)">
@@ -411,290 +416,283 @@ function vEst(){
     <textarea id="e_conf" rows="2" placeholder="Observaciones confidenciales (solo en ficha, oculto por defecto)"></textarea>
     <button class="btn" onclick="addEst()">Guardar estudiante</button>
   </div>
+  <div class="card"><h3>Importar desde CSV</h3>
+    <p class="meta">Exporta tu planilla de Excel a CSV (Archivo → Guardar como → CSV). Columnas: codigo, curso, estado, nee, fechaEval, fechaReeval, obs. Los códigos repetidos se omiten.</p>
+    <input type="file" accept=".csv,text/csv" onchange="leerCSV(this)">
+    <div id="impPrev"></div></div>
   <div class="card">${lista}</div>`;
 }
 function addEst(){
   const cod=document.getElementById('e_cod').value.trim();
   if(!cod){ alert('Ingresa un código o iniciales'); return; }
-  S.students.push({id:uid(),codigo:cod,curso:document.getElementById('e_curso').value.trim(),
-    estado:document.getElementById('e_estado').value,nee:document.getElementById('e_nee').value,
-    fechaEval:document.getElementById('e_fe').value,fechaReeval:document.getElementById('e_fr').value,
-    obs:document.getElementById('e_obs').value.trim(),prof:document.getElementById('e_prof').value.trim(),inst:document.getElementById('e_inst').value.trim(),elig:document.getElementById('e_elig').value,der:document.getElementById('e_der').value.trim(),fder:document.getElementById('e_fder').value,conf:document.getElementById('e_conf').value.trim()});
+  S.students.push({id:uid(),codigo:cod,curso:document.getElementById('e_curso').value.trim(),estado:document.getElementById('e_estado').value,nee:document.getElementById('e_nee').value,fechaEval:document.getElementById('e_fe').value,fechaReeval:document.getElementById('e_fr').value,obs:document.getElementById('e_obs').value.trim(),prof:document.getElementById('e_prof').value.trim(),inst:document.getElementById('e_inst').value.trim(),elig:document.getElementById('e_elig').value,der:document.getElementById('e_der').value.trim(),fder:document.getElementById('e_fder').value,conf:document.getElementById('e_conf').value.trim(),chk:{}});
   save(); render();
 }
-function cambiarEstado(id){
-  const s=S.students.find(x=>x.id===id);
-  const orden=['Activo','Egresado','Retirado'];
-  s.estado=orden[(orden.indexOf(s.estado)+1)%orden.length];
-  save(); render();
+function leerCSV(input){
+  const f=input.files[0]; if(!f) return;
+  const r=new FileReader();
+  r.onload=()=>{
+    const lines=r.result.split(/\r?\n/).filter(l=>l.trim());
+    if(lines.length<2){ document.getElementById('impPrev').innerHTML='<p class="err">Archivo sin filas.</p>'; return; }
+    const sep=lines[0].includes(';')?';':',';
+    const head=lines[0].split(sep).map(h=>h.replace(/"/g,'').trim().toLowerCase());
+    const idx=k=>head.indexOf(k.toLowerCase());
+    if(idx('codigo')<0){ document.getElementById('impPrev').innerHTML='<p class="err">Falta la columna "codigo".</p>'; return; }
+    const filas=lines.slice(1).map(l=>{const c=l.split(sep).map(x=>x.replace(/^"|"$/g,'').trim()); const g=k=>idx(k)>=0?(c[idx(k)]||''):''; return {codigo:g('codigo'),curso:g('curso'),estado:g('estado')||'Activo',nee:g('nee'),fechaEval:g('fechaeval'),fechaReeval:g('fechareeval'),obs:g('obs')};}).filter(x=>x.codigo);
+    const existentes=new Set(S.students.map(s=>s.codigo.toLowerCase()));
+    const nuevas=filas.filter(x=>!existentes.has(x.codigo.toLowerCase()));
+    IMPQ=nuevas;
+    document.getElementById('impPrev').innerHTML=`<p>Filas válidas: <b>${filas.length}</b> · Nuevas: <b>${nuevas.length}</b> · Duplicadas (omitidas): <b>${filas.length-nuevas.length}</b></p>
+      <button class="btn" onclick="confirmarImport()">Importar ${nuevas.length} estudiante(s)</button>`;
+  };
+  r.readAsText(f);
 }
-function borrar(col,id){
-  if(!confirm('¿Eliminar este registro?')) return;
-  S[col]=S[col].filter(x=>x.id!==id); save(); render();
+function confirmarImport(){
+  if(!IMPQ||!IMPQ.length) return;
+  if(!confirm('Antes de importar se guarda una copia de seguridad local. ¿Continuar?')) return;
+  localStorage.setItem(vk()+'_prev',localStorage.getItem(vk()));
+  IMPQ.forEach(x=>S.students.push({...x,id:uid(),chk:{}}));
+  IMPQ=null; save(); render(); alert('Importación completa.');
 }
-/* ================= ATENCIONES ================= */
+function cambiarEstado(id){ const s=S.students.find(x=>x.id===id); const o=['Activo','Egresado','Retirado']; s.estado=o[(o.indexOf(s.estado)+1)%o.length]; save(); render(); }
+function borrar(col,id){ if(!confirm('¿Eliminar este registro?')) return; S[col]=S[col].filter(x=>x.id!==id); save(); render(); }
+/* ===== atenciones ===== */
 function vAt(){
-  const lista=[...S.sessions].filter(s=>!FILTRO||(nombreEst(s.estudiante)+' '+s.tipo+' '+s.desc).toLowerCase().includes(FILTRO)).sort((a,b)=>b.fecha.localeCompare(a.fecha)).map(s=>`
-    <div class="item">
-      <b>${esc(s.fecha)}</b> · <span class="tag">${esc(s.tipo)}</span>
-      <span class="tag">${esc(s.duracion)} min</span><br>
+  const meses=[...new Set(S.sessions.map(s=>s.fecha.slice(0,7)))].sort().reverse();
+  const lista=[...S.sessions].filter(s=>{
+    const txt=(nombreEst(s.estudiante)+' '+s.tipo+' '+s.desc).toLowerCase();
+    return (!FILT.txt||txt.includes(FILT.txt))&&(!FILT.tipo||s.tipo===FILT.tipo)&&(!FILT.mes||s.fecha.startsWith(FILT.mes));
+  }).sort((a,b)=>b.fecha.localeCompare(a.fecha)).map(s=>`
+    <div class="item"><b>${esc(s.fecha)}</b> · <span class="tag">${esc(s.tipo)}</span><span class="tag">${esc(s.duracion)} min</span><span class="tag">${esc(s.pr||'Media')}</span><span class="tag">${esc(s.es||'Realizada')}</span><span class="tag">${esc(s.cn||'Presencial')}</span><br>
       <span class="meta">Estudiante: ${esc(nombreEst(s.estudiante))}</span><br>
       <span class="sens">${esc(s.desc)}</span>
-      <div style="margin-top:4px"><button class="mini" onclick="editarAt('${s.id}')">Editar</button><button class="del" onclick="borrar('sessions','${s.id}')">Eliminar</button></div>
-    </div>`).join('') || '<p class="empty">Sin atenciones registradas.</p>';
+      <div style="margin-top:4px"><button class="mini" onclick="editarAt('${s.id}')">Editar</button><button class="del" onclick="borrar('sessions','${s.id}')">Eliminar</button></div></div>`).join('')||'<p class="empty">Sin atenciones con esos filtros.</p>';
   return `
   <h2>Registro de atenciones</h2>
-  <input placeholder="Buscar por estudiante, tipo o texto" value="${esc(FILTRO)}" onchange="FILTRO=this.value.toLowerCase();render()">
+  <div class="card">
+    <input placeholder="Buscar por estudiante, tipo o texto" value="${esc(FILT.txt)}" onchange="FILT.txt=this.value.toLowerCase();render()">
+    <div class="row"><select onchange="FILT.tipo=this.value;render()"><option value="">Todos los tipos</option>${opts(TIPOS_ATENCION,FILT.tipo).replace(/<option (?!selected)/g,'<option ')}</select>
+    <select onchange="FILT.mes=this.value;render()"><option value="">Todos los meses</option>${meses.map(m=>`<option value="${m}" ${FILT.mes===m?'selected':''}>${m}</option>`).join('')}</select></div>
+  </div>
   <div class="card">
     <h3>Nueva atención</h3>
-    <div class="row">
-      <div><input type="date" id="a_f" value="${hoy()}"></div>
-      <div><input type="number" id="a_d" placeholder="Minutos" value="45"></div>
-    </div>
+    <div class="row"><input type="date" id="a_f" value="${hoy()}"><input type="number" id="a_d" placeholder="Minutos" value="45"></div>
     <div class="row"><input type="time" id="a_hi" title="Hora inicio"><input type="time" id="a_ht" title="Hora término"></div>
-    <select id="a_t">${opts(TIPOS_ATENCION)}</select>
-    <select id="a_e"><option value="">— Sin estudiante específico —</option>${studentOpts()}</select>
-    <textarea id="a_desc" rows="3" placeholder="Descripción: objetivo, intervención, avances, acuerdos (mín. 10 caracteres)"></textarea>
+    <div class="row">${[30,45,60].map(m=>`<button class="mini" type="button" onclick="document.getElementById('a_d').value=${m}">${m} min</button>`).join('')}</div>
+    <div class="row"><select id="a_pr">${opts(['Alta','Media','Baja'],'Media')}</select><select id="a_es">${opts(['Realizada','Programada','Cancelada','Reprogramada','No asistió'],'Realizada')}</select><select id="a_cn">${opts(['Presencial','Remoto','Telefónico','Correo','Mensajería'],'Presencial')}</select></div>
+    <select id="a_t">${opts(TIPOS_ATENCION,'')}</select>
+    <select id="a_e"><option value="">— Sin estudiante específico —</option>${S.students.map(s=>`<option value="${s.id}">${esc(s.codigo)} - ${esc(s.nee)}</option>`).join('')}</select>
+    <textarea id="a_desc" rows="3" placeholder="Descripción: objetivo, intervención, avances, acuerdos (mín. 10 caracteres)" oninput="DRAFT=this.value;sensAviso(this.value)">${esc(DRAFT)}</textarea>
+    <p class="meta" id="sensWarn"></p>
+    <p class="meta">El borrador se conserva mientras la app esté abierta y se borra al guardar.</p>
     <button class="btn" onclick="addAt()">Guardar atención</button>
   </div>
   <div class="card">${lista}</div>`;
 }
+function sensAviso(t){
+  const el=document.getElementById('sensWarn'); if(!el) return;
+  el.innerHTML=/consumo|droga|alcohol|autolesi|suicid|ideaci|abuso|violencia|golpe/i.test(t||'')?'<span class="late">Atención: el texto parece contener datos sensibles. Regístralos solo si es necesario y en observaciones confidenciales.</span>':'';
+}
+function calcDur(){
+  const i=document.getElementById('a_hi'), t=document.getElementById('a_ht');
+  if(!i||!t||!i.value||!t.value) return 0;
+  const [h1,m1]=i.value.split(':').map(Number), [h2,m2]=t.value.split(':').map(Number);
+  return Math.max(0,(h2*60+m2)-(h1*60+m1));
+}
 function addAt(){
   const desc=document.getElementById('a_desc').value.trim();
-  S.sessions.push({id:uid(),fecha:document.getElementById('a_f').value||hoy(),
-    duracion:calcDur()||document.getElementById('a_d').value||0,tipo:document.getElementById('a_t').value,
-    estudiante:document.getElementById('a_e').value,desc});
-  save(); render();
+  S.sessions.push({id:uid(),fecha:document.getElementById('a_f').value||hoy(),duracion:calcDur()||document.getElementById('a_d').value||0,tipo:document.getElementById('a_t').value,estudiante:document.getElementById('a_e').value,desc,pr:document.getElementById('a_pr').value,es:document.getElementById('a_es').value,cn:document.getElementById('a_cn').value});
+  DRAFT=''; save(); render();
 }
-/* ================= PLANES / METAS ================= */
+function editarAt(id){
+  const s=S.sessions.find(x=>x.id===id);
+  const d=prompt('Editar descripción:',s.desc); if(d===null) return;
+  const f=prompt('Fecha (AAAA-MM-DD):',s.fecha); if(f===null) return;
+  s.desc=d.trim(); s.fecha=f.trim()||s.fecha; save(); render();
+}
+/* ===== metas ===== */
 function vPlanes(){
   const lista=S.goals.map(g=>`
-    <div class="item">
-      <b>${esc(g.meta)}</b><br>
-      <span class="meta">${esc(nombreEst(g.estudiante))} · Plazo: ${esc(g.plazo||'—')}</span>
+    <div class="item"><b>${esc(g.meta)}</b><br>
+      <span class="meta">${esc(nombreEst(g.estudiante))} · ${esc(g.area||'—')} · Resp.: ${esc(g.resp||'—')} · Plazo: ${esc(g.plazo||'—')}</span><br>
+      <span class="meta">Línea base: ${esc(g.linea||'—')} → meta: ${esc(g.final||'—')} · Sesiones vinculadas: ${(((S.students.find(s=>s.id===g.estudiante)||{}).ses)||[]).filter(x=>x.gid===g.id).length}</span>
       <div class="bar"><div style="width:${g.progreso}%"></div></div>
-      <span class="meta">${g.progreso}% ${g.plazo && g.plazo<hoy() && g.progreso<100?'<span class="late">· Vencida</span>':''}</span>
+      <span class="meta">${g.progreso}% ${g.plazo&&g.plazo<hoy()&&g.progreso<100?'<span class="late">· Vencida</span>':''}</span>
       <div style="margin-top:4px">
         <button class="mini" onclick="avanzar('${g.id}')">+10%</button>
         <button class="mini" onclick="setProg('${g.id}')">Editar %</button>
         <button class="del" onclick="borrar('goals','${g.id}')">Eliminar</button>
-      </div>
-    </div>`).join('') || '<p class="empty">Sin metas registradas.</p>';
+      </div></div>`).join('')||'<p class="empty">Sin metas registradas.</p>';
   return `
-  <h2>Planes de apoyo y metas</h2>
-  <div class="card">
-    <h3>Nueva meta</h3>
-    <select id="g_e">${studentOpts()}</select>
-    <textarea id="g_m" rows="2" placeholder="Meta (ej: Mejorar comprensión lectora nivel 2 en textos de 1 página)"></textarea>
+  <h2>Metas y objetivos</h2>
+  <div class="card"><h3>Nueva meta</h3>
+    <select id="g_e">${S.students.map(s=>`<option value="${s.id}">${esc(s.codigo)} - ${esc(s.nee)}</option>`).join('')}</select>
+    <textarea id="g_m" rows="2" placeholder="Objetivo medible (ej: Leer textos de 1 página con 80% de comprensión)"></textarea>
+    <div class="row"><input id="g_l" placeholder="Línea base"><input id="g_f" placeholder="Meta final"></div>
+    <div class="row"><select id="g_a">${opts(AREAS_META,'')}</select><select id="g_r">${opts(RESP_META,'')}</select></div>
     <input type="date" id="g_p">
-    <button class="btn" onclick="addGoal()">Guardar meta</button>
-  </div>
+    <button class="btn" onclick="addGoal()">Guardar meta</button></div>
   <div class="card">${lista}</div>`;
 }
 function addGoal(){
-  const m=document.getElementById('g_m').value.trim();
-  if(!m){ alert('Escribe la meta'); return; }
-  S.goals.push({id:uid(),estudiante:document.getElementById('g_e').value,meta:m,
-    plazo:document.getElementById('g_p').value,progreso:0});
+  const m=document.getElementById('g_m').value.trim(); if(!m){ alert('Escribe la meta'); return; }
+  S.goals.push({id:uid(),estudiante:document.getElementById('g_e').value,meta:m,linea:document.getElementById('g_l').value.trim(),final:document.getElementById('g_f').value.trim(),area:document.getElementById('g_a').value,resp:document.getElementById('g_r').value,plazo:document.getElementById('g_p').value,progreso:0,hist:[]});
   save(); render();
 }
-function avanzar(id){
-  const g=S.goals.find(x=>x.id===id); g.progreso=Math.min(100,g.progreso+10); save(); render();
-}
+function avanzar(id){ const g=S.goals.find(x=>x.id===id); g.progreso=Math.min(100,g.progreso+10); g.hist=g.hist||[]; g.hist.push({f:hoy(),p:g.progreso}); save(); render(); }
 function setProg(id){
-  const g=S.goals.find(x=>x.id===id);
-  const v=prompt('Porcentaje de avance (0-100):',g.progreso);
-  if(v===null) return;
-  g.progreso=Math.max(0,Math.min(100,+v||0)); save(); render();
+  const g=S.goals.find(x=>x.id===id); const v=prompt('Porcentaje de avance (0-100):',g.progreso); if(v===null) return;
+  g.progreso=Math.max(0,Math.min(100,+v||0)); g.hist=g.hist||[]; g.hist.push({f:hoy(),p:g.progreso}); save(); render();
 }
-/* ================= FAMILIAS ================= */
+/* ===== familias ===== */
 function vFam(){
   const lista=[...S.meetings].sort((a,b)=>b.fecha.localeCompare(a.fecha)).map(r=>`
-    <div class="item">
-      <b>${esc(r.fecha)}</b> <span class="tag ${r.estado==='Realizada'?'ok':r.estado==='Cancelada'?'warn':''}">${esc(r.estado)}</span><br>
-      <span class="meta">${esc(nombreEst(r.estudiante))} · ${esc(r.participantes)}</span><br>
-      ${esc(r.tema)}
-      <div style="margin-top:4px">
-        <button class="mini" onclick="cambiarReun('${r.id}')">Cambiar estado</button>
-        <button class="del" onclick="borrar('meetings','${r.id}')">Eliminar</button>
-      </div>
-    </div>`).join('') || '<p class="empty">Sin reuniones registradas.</p>';
+    <div class="item"><b>${esc(r.fecha)}</b> <span class="tag ${r.estado==='Realizada'?'ok':r.estado==='Cancelada'?'warn':''}">${esc(r.estado)}</span><br>
+      <span class="meta">${esc(nombreEst(r.estudiante))} · ${esc(r.participantes)}</span><br>${esc(r.tema)}
+      <div style="margin-top:4px"><button class="mini" onclick="cambiarReun('${r.id}')">Cambiar estado</button><button class="del" onclick="borrar('meetings','${r.id}')">Eliminar</button></div></div>`).join('')||'<p class="empty">Sin reuniones registradas.</p>';
   return `
   <h2>Reuniones con familias y equipo</h2>
-  <div class="card">
-    <h3>Nueva reunión</h3>
-    <div class="row">
-      <input type="date" id="r_f" value="${hoy()}">
-      <select id="r_s"><option>Programada</option><option>Realizada</option><option>Cancelada</option></select>
-    </div>
-    <select id="r_e"><option value="">— General —</option>${studentOpts()}</select>
+  <div class="card"><h3>Nueva reunión</h3>
+    <div class="row"><input type="date" id="r_f" value="${hoy()}"><select id="r_s"><option>Programada</option><option>Realizada</option><option>Cancelada</option></select></div>
+    <select id="r_e"><option value="">— General —</option>${S.students.map(s=>`<option value="${s.id}">${esc(s.codigo)} - ${esc(s.nee)}</option>`).join('')}</select>
     <input id="r_p" placeholder="Participantes (ej: madre, profesora jefa, UTP)">
     <textarea id="r_t" rows="2" placeholder="Tema y acuerdos"></textarea>
-    <button class="btn" onclick="addReun()">Guardar reunión</button>
-  </div>
+    <button class="btn" onclick="addReun()">Guardar reunión</button></div>
   <div class="card">${lista}</div>`;
 }
 function addReun(){
-  S.meetings.push({id:uid(),fecha:document.getElementById('r_f').value||hoy(),
-    estado:document.getElementById('r_s').value,estudiante:document.getElementById('r_e').value,
-    participantes:document.getElementById('r_p').value,tema:document.getElementById('r_t').value});
+  S.meetings.push({id:uid(),fecha:document.getElementById('r_f').value||hoy(),estado:document.getElementById('r_s').value,estudiante:document.getElementById('r_e').value,participantes:document.getElementById('r_p').value,tema:document.getElementById('r_t').value});
   save(); render();
 }
-function cambiarReun(id){
-  const r=S.meetings.find(x=>x.id===id);
-  const orden=['Programada','Realizada','Cancelada'];
-  r.estado=orden[(orden.indexOf(r.estado)+1)%orden.length];
-  save(); render();
-}
-/* ================= TAREAS ================= */
+function cambiarReun(id){ const r=S.meetings.find(x=>x.id===id); const o=['Programada','Realizada','Cancelada']; r.estado=o[(o.indexOf(r.estado)+1)%o.length]; save(); render(); }
+/* ===== tareas ===== */
 function vTar(){
   const lista=[...S.tasks].sort((a,b)=>(a.done-b.done)||(a.vence||'9999').localeCompare(b.vence||'9999')).map(t=>{
-    const venc = !t.done && t.vence && t.vence<hoy();
-    return `<div class="item">
-      <label><input type="checkbox" style="width:auto" ${t.done?'checked':''} onchange="toggleTarea('${t.id}')">
+    const venc=!t.done&&t.vence&&t.vence<hoy();
+    return `<div class="item"><label><input type="checkbox" ${t.done?'checked':''} onchange="toggleTarea('${t.id}')">
       <b style="${t.done?'text-decoration:line-through;color:#94a3b8':''}">${esc(t.desc)}</b></label><br>
-      <span class="tag">${esc(t.tipo)}</span>
-      <span class="meta ${venc?'late':''}">Vence: ${esc(t.vence||'—')}${venc?' (vencida)':''}</span>
-      <div style="margin-top:4px"><button class="del" onclick="borrar('tasks','${t.id}')">Eliminar</button></div>
-    </div>`;}).join('') || '<p class="empty">Sin tareas.</p>';
+      <span class="tag">${esc(t.tipo)}</span><span class="meta ${venc?'late':''}">Vence: ${esc(t.vence||'—')}${venc?' (vencida)':''}</span>
+      <div style="margin-top:4px"><button class="del" onclick="borrar('tasks','${t.id}')">Eliminar</button></div></div>`;}).join('')||'<p class="empty">Sin tareas.</p>';
   return `
   <h2>Tareas y gestión</h2>
-  <div class="card">
-    <h3>Nueva tarea</h3>
+  <div class="card"><h3>Nueva tarea</h3>
     <input id="t_d" placeholder="Descripción (ej: Entregar informe PIE a UTP)">
-    <div class="row">
-      <select id="t_t">${opts(['Gestión','Informe','Coordinación','Formación','Administrativa'])}</select>
-      <input type="date" id="t_v">
-    </div>
-    <button class="btn" onclick="addTarea()">Guardar tarea</button>
-  </div>
+    <div class="row"><select id="t_t">${opts(['Gestión','Informe','Coordinación','Formación','Administrativa'],'')}</select><input type="date" id="t_v"></div>
+    <button class="btn" onclick="addTarea()">Guardar tarea</button></div>
   <div class="card">${lista}</div>`;
 }
 function addTarea(){
-  const d=document.getElementById('t_d').value.trim();
-  if(!d){ alert('Escribe la descripción'); return; }
-  S.tasks.push({id:uid(),desc:d,tipo:document.getElementById('t_t').value,
-    vence:document.getElementById('t_v').value,done:false});
-  save(); render();
+  const d=document.getElementById('t_d').value.trim(); if(!d){ alert('Escribe la descripción'); return; }
+  S.tasks.push({id:uid(),desc:d,tipo:document.getElementById('t_t').value,vence:document.getElementById('t_v').value,done:false}); save(); render();
 }
-function toggleTarea(id){
-  const t=S.tasks.find(x=>x.id===id); t.done=!t.done; save(); render();
-}
-/* ================= RESPALDO ================= */
+function toggleTarea(id){ const t=S.tasks.find(x=>x.id===id); t.done=!t.done; save(); render(); }
+/* ===== ajustes ===== */
 function vRes(){
+  const c=cfg();
   return `
-  <h2>Respaldo y seguridad</h2>
+  <h2>Ajustes y respaldo</h2>
   <div class="card">
     <p class="meta">Tus datos están cifrados en este equipo. Los respaldos también se cifran con una contraseña que tú eliges.</p>
-    <button class="btn" onclick="exportar()">Exportar respaldo cifrado (.json)</button>
-  </div>
-  <div class="card">
-    <h3>Importar respaldo</h3>
+    <button class="btn" onclick="exportar()">Exportar respaldo cifrado (.json)</button></div>
+  <div class="card"><h3>Importar respaldo</h3>
     <input type="file" accept="application/json" onchange="importar(this)">
-    <p class="meta">Pedirá la contraseña del respaldo y reemplazará los datos actuales.</p>
-  </div>
-  <div class="card">
-    <h3>Acceso</h3>
+    <p class="meta">Pedirá la contraseña del respaldo y reemplazará los datos actuales.</p></div>
+  <div class="card"><h3>Acceso</h3>
     <button class="btn sec" onclick="cambiarPin()">Cambiar PIN</button>
     <button class="btn sec" onclick="bloquear()">Bloquear ahora</button>
     <button class="btn sec" onclick="cambiarPerfil()">Cambiar de perfil</button>
     <button class="btn sec" onclick="togglePres()">Modo presentación (on/off)</button>
-  </div>
-  <div class="card">
-    <button class="btn sec" onclick="borrarTodo()">Borrar todos los datos</button>
-  </div>`;
+    <button class="btn sec" onclick="exportarPerfil()">Transferir perfil a otro equipo (.json)</button></div>
+  <div class="card"><h3>Apariencia</h3>
+    <label><input type="checkbox" ${c.oscuro?'checked':''} onchange="cfg().oscuro=this.checked;save();render()"> Modo oscuro</label></div>
+  <div class="card"><h3>Perfil de solo lectura</h3>
+    <label><input class="permite" type="checkbox" ${c.soloLectura?'checked':''} onchange="cfg().soloLectura=this.checked;save();render()"> Activar modo revisión (UTP o dirección)</label>
+    <p class="meta">Oculta botones y bloquea campos. Para editar de nuevo, desactívalo aquí.</p></div>
+  <div class="card"><h3>Firma para informes</h3>
+    <input class="permite" value="${esc(c.firma||'')}" placeholder="Nombre y cargo para la firma" onchange="cfg().firma=this.value.trim();save()">
+    <p class="meta">Aparece al pie de los informes impresos. No es firma electrónica con validez legal.</p></div>
+  <div class="card"><h3>Nivel de detalle</h3>
+    <select onchange="cfg().nivel=this.value;save();render()">${opts(['basico','estandar','completo'],c.nivel)}</select>
+    <p class="meta">Básico: registro y CMI. Estándar: + perfil de funcionamiento y checklist. Completo: + evaluación detallada e informales. Cambiar de nivel no borra datos.</p>
+    <h3>Vigencia de evaluación (meses)</h3>
+    <input type="number" value="${c.plazoMeses}" onchange="cfg().plazoMeses=+this.value||24;save();render()">
+    <p class="meta">Valor provisorio de 24 meses: verificar con el Decreto 170/2009 antes de usar con casos reales.</p></div>
+  <div class="card"><button class="btn sec" onclick="borrarTodo()">Borrar todos los datos de este perfil</button></div>`;
 }
 async function exportar(){
-  const pw = prompt('Crea una contraseña para este respaldo (mínimo 6 caracteres). Guárdala aparte: sin ella el respaldo no se puede abrir.');
+  const pw=prompt('Crea una contraseña para este respaldo (mínimo 6 caracteres). Guárdala aparte.');
   if(pw===null) return;
   if(pw.length<6){ alert('La contraseña debe tener al menos 6 caracteres.'); return; }
-  const salt = crypto.getRandomValues(new Uint8Array(16));
-  const clave = await deriveKey(pw, salt);
-  const c = await cifrar(clave, JSON.stringify(S));
-  const out = JSON.stringify({formato:'cmi-pie-respaldo', v:2, salt:b64(salt), iv:c.iv, ct:c.ct});
-  const blob = new Blob([out],{type:'application/json'});
-  const a = document.createElement('a');
-  a.href = URL.createObjectURL(blob);
-  a.download = 'respaldo_cifrado_cmi_pie_'+hoy()+'.json';
-  a.click();
+  const salt=crypto.getRandomValues(new Uint8Array(16));
+  const c=await cifrar(await deriveKey(pw,salt),JSON.stringify(S));
+  const out=JSON.stringify({formato:'cmi-pie-respaldo',v:2,salt:b64(salt),iv:c.iv,ct:c.ct});
+  const a=document.createElement('a'); a.href=URL.createObjectURL(new Blob([out],{type:'application/json'}));
+  a.download='respaldo_cifrado_cmi_pie_'+hoy()+'.json'; a.click();
+  cfg().ultimoRespaldo=hoy(); save();
 }
 function importar(input){
-  const f = input.files[0]; if(!f) return;
-  const r = new FileReader();
-  r.onload = async ()=>{
+  const f=input.files[0]; if(!f) return;
+  const r=new FileReader();
+  r.onload=async()=>{
     try{
-      const obj = JSON.parse(r.result);
-      let nuevo;
+      const obj=JSON.parse(r.result); let nuevo;
       if(obj.formato==='cmi-pie-respaldo'){
-        const pw = prompt('Contraseña del respaldo:');
-        if(pw===null){ input.value=''; return; }
-        const clave = await deriveKey(pw, unb64(obj.salt));
-        nuevo = JSON.parse(await descifrar(clave, obj.iv, obj.ct));
+        const pw=prompt('Contraseña del respaldo:'); if(pw===null){ input.value=''; return; }
+        nuevo=JSON.parse(await descifrar(await deriveKey(pw,unb64(obj.salt)),obj.iv,obj.ct));
       } else if(obj.students){
-        if(!confirm('Este respaldo no está cifrado. Se importará tal cual. ¿Continuar?')) { input.value=''; return; }
-        nuevo = obj;
-      } else {
-        throw new Error('formato');
-      }
-      if(!confirm('Esto reemplaza los datos actuales. ¿Continuar?')){ input.value=''; return; }
-      S = {students:[],sessions:[],goals:[],meetings:[],tasks:[],formacion:0, ...nuevo};
-      save(); render(); alert('Respaldo importado');
-    }catch(e){
-      alert('No se pudo importar: archivo no válido o contraseña incorrecta.');
-    }
+        if(!confirm('Este respaldo no está cifrado. ¿Continuar?')){ input.value=''; return; }
+        nuevo=obj;
+      } else throw new Error('formato');
+      if(!confirm('Esto reemplaza los datos actuales de este perfil. ¿Continuar?')){ input.value=''; return; }
+      localStorage.setItem(vk()+'_prev',localStorage.getItem(vk()));
+      S={students:[],sessions:[],goals:[],meetings:[],tasks:[],cases:[],plan:[],formacion:0,...nuevo};
+      save(); render(); alert('Respaldo importado. Se guardó una copia previa en este equipo.');
+    }catch(e){ alert('No se pudo importar: archivo no válido o contraseña incorrecta.'); }
     input.value='';
   };
   r.readAsText(f);
 }
 function borrarTodo(){
   if(!confirm('¿Borrar este perfil y todos sus datos? Esta acción no se puede deshacer.')) return;
-  localStorage.removeItem(vk());
-  setPerfiles(getPerfiles().filter(p=>p.id!==PID)); PID=null;
-  clearTimeout(timer);
-  showPerfiles();
+  localStorage.removeItem(vk()); localStorage.removeItem(vk()+'_prev');
+  setPerfiles(getPerfiles().filter(p=>p.id!==PID)); PID=null; clearTimeout(timer); showPerfiles();
 }
-/* ================= FASE 1 A 6 (sin huella) ================= */
-let FILTRO='';
-let PRES=false;
-let FICHA=null;
-let VERCONF=false;
-const ESTADOS_CASO=['Abierto','En seguimiento','Derivado','Cerrado'];
-function registrar(acc){
-  if(!S) return;
-  S.log=S.log||[];
-  S.log.unshift({f:new Date().toLocaleString('es-CL'),a:acc});
-  S.log=S.log.slice(0,200);
+/* ===== transferencia de perfil (P.15) ===== */
+async function exportarPerfil(){
+  const pw=prompt('Contraseña para transferir este perfil (mínimo 6 caracteres). Se pedirá al importarlo.');
+  if(pw===null) return; if(pw.length<6){ alert('La contraseña debe tener al menos 6 caracteres.'); return; }
+  const pf=perfilActual(); const salt=crypto.getRandomValues(new Uint8Array(16));
+  const c=await cifrar(await deriveKey(pw,salt),JSON.stringify(S));
+  const out=JSON.stringify({formato:'cmi-pie-perfil',v:1,meta:{nombre:pf.nombre,cargo:pf.cargo||'',establecimiento:pf.establecimiento||'',anio:pf.anio||''},salt:b64(salt),iv:c.iv,ct:c.ct});
+  const a=document.createElement('a'); a.href=URL.createObjectURL(new Blob([out],{type:'application/json'})); a.download='perfil_cmi_pie_'+hoy()+'.json'; a.click();
 }
-function togglePres(){
-  PRES=!PRES;
-  document.body.classList.toggle('pres',PRES);
-  alert(PRES?'Modo presentación activado: datos sensibles difuminados.':'Modo presentación desactivado.');
+function importarPerfil(){
+  const inp=document.createElement('input'); inp.type='file'; inp.accept='application/json';
+  inp.onchange=async()=>{
+    const f=inp.files[0]; if(!f) return;
+    try{
+      const obj=JSON.parse(await f.text()); if(obj.formato!=='cmi-pie-perfil') throw new Error('formato');
+      const pw=prompt('Contraseña que usaste al transferir el perfil:'); if(pw===null) return;
+      const datos=JSON.parse(await descifrar(await deriveKey(pw,unb64(obj.salt)),obj.iv,obj.ct));
+      const p1=prompt('Nuevo PIN para este perfil en este equipo (6 a 12 números):'); if(p1===null) return;
+      if(!pinValido(p1)){ alert('El PIN debe tener entre 6 y 12 números.'); return; }
+      if(prompt('Repite el nuevo PIN:')!==p1){ alert('Los PIN no coinciden.'); return; }
+      const id=uid(), salt2=crypto.getRandomValues(new Uint8Array(16));
+      SALT=b64(salt2); CK=await deriveKey(p1,salt2);
+      S=datos; S.cfg=S.cfg||{nivel:'estandar',plazoMeses:PLAZO_DEFAULT_MESES};
+      const lista=getPerfiles();
+      lista.push({id,nombre:obj.meta.nombre,cargo:obj.meta.cargo,establecimiento:obj.meta.establecimiento,anio:obj.meta.anio,vk:'cmi_pie_vault_'+id,fallos:0,bloqueadoHasta:0});
+      setPerfiles(lista); PID=id; await guardar();
+      alert('Perfil importado. Ingresa con tu nuevo PIN.'); showLock();
+    }catch(e){ alert('No se pudo importar el perfil: archivo o contraseña no válidos.'); }
+  };
+  inp.click();
 }
-function semaforo(s){
-  if(!s.fechaReeval) return '<span class="tag warn">Sin fecha de reevaluación</span>';
-  const d=Math.ceil((new Date(s.fechaReeval)-new Date(hoy()))/86400000);
-  const rojo='background:#fee2e2;color:#b91c1c';
-  if(d<0) return '<span class="tag" style="'+rojo+'">Reevaluación vencida</span>';
-  if(d<=7) return '<span class="tag" style="'+rojo+'">Vence en '+d+' d (alerta 7)</span>';
-  if(d<=30) return '<span class="tag warn">Vence en '+d+' d (alerta 30)</span>';
-  if(d<=60) return '<span class="tag" style="background:#fef9c3;color:#854d0e">Vence en '+d+' d (alerta 60)</span>';
-  return '<span class="tag ok">Vigente ('+d+' d)</span>';
-}
-function calcDur(){
-  const i=document.getElementById('a_hi'), t=document.getElementById('a_ht');
-  if(!i||!t||!i.value||!t.value) return 0;
-  const [h1,m1]=i.value.split(':').map(Number);
-  const [h2,m2]=t.value.split(':').map(Number);
-  return Math.max(0,(h2*60+m2)-(h1*60+m1));
-}
-function editarAt(id){
-  const s=S.sessions.find(x=>x.id===id);
-  const d=prompt('Editar descripción:', s.desc); if(d===null) return;
-  const f=prompt('Fecha (AAAA-MM-DD):', s.fecha); if(f===null) return;
-  s.desc=d.trim(); s.fecha=f.trim()||s.fecha; save(); render();
-}
-/* Ficha 360 */
-function verFicha(id){ FICHA=id; VERCONF=false; cur='ficha'; render(); window.scrollTo(0,0); }
+/* ===== registro y modo presentación ===== */
+function registrar(acc){ if(!S) return; S.log=S.log||[]; S.log.unshift({f:new Date().toLocaleString('es-CL'),a:acc}); S.log=S.log.slice(0,200); }
+function togglePres(){ PRES=!PRES; document.body.classList.toggle('pres',PRES); alert(PRES?'Modo presentación activado: datos sensibles difuminados.':'Modo presentación desactivado.'); }
+/* ===== ficha 360 ===== */
+function verFicha(id){ FICHA=id; VERCONF=false; cur='ficha'; history.pushState({v:'ficha'},''); render(); window.scrollTo(0,0); }
 function vFicha(){
   const s=S.students.find(x=>x.id===FICHA);
   if(!s){ cur='estudiantes'; return vEst(); }
@@ -704,142 +702,226 @@ function vFicha(){
   const cs=(S.cases||[]).filter(c=>c.estudiante===s.id);
   return `
   <button class="btn sec" onclick="go('estudiantes')">← Volver</button>
+  <button class="btn sec" onclick="infEst('${s.id}')">Informe del estudiante (solo código)</button>
   <h2>Ficha de ${esc(s.codigo)}</h2>
-  <div class="card">
-    <span class="tag">${esc(s.curso)}</span><span class="tag">${esc(s.estado)}</span>
-    <p class="meta">${esc(s.nee)}</p>
-    <p>${semaforo(s)}</p>
-  </div>
+  <div class="card"><span class="tag">${esc(s.curso)}</span><span class="tag">${esc(s.estado)}</span><p class="meta">${esc(s.nee)}</p><p>${semaforo(s)}</p></div>
   <div class="card"><h3>Evaluación PIE</h3>
     <p class="meta">Evaluación: ${esc(s.fechaEval||'—')} · Profesional: ${esc(s.prof||'—')}</p>
     <p class="meta">Instrumentos: ${esc(s.inst||'—')}</p>
     <p class="meta">Elegibilidad (Decreto 170/2009): ${esc(s.elig||'—')}</p>
     <p class="meta">Derivación: ${esc(s.der||'—')} · Envío: ${esc(s.fder||'—')}</p>
-    <p class="meta">Próxima reevaluación: ${esc(s.fechaReeval||'—')}</p>
-  </div>
-  <div class="card"><h3>Observaciones</h3>
-    <p class="sens">${esc(s.obs||'—')}</p>
+    <p class="meta">Vencimiento de vigencia (${cfg().plazoMeses} meses): ${esc(vencimientoEval(s)||'—')}</p></div>
+  ${vChecklist(s)}
+  ${nivelOk('estandar')?vPerfilFunc(s):''}
+  ${nivelOk('estandar')?vSesiones(s):''}
+  ${nivelOk('completo')?vEvalDet(s)+vInformales(s):''}
+  <div class="card"><h3>Observaciones</h3><p class="sens">${esc(s.obs||'—')}</p>
     <h3>Confidencial</h3>
     <button class="mini" onclick="VERCONF=!VERCONF;render()">${VERCONF?'Ocultar':'Mostrar'}</button>
-    ${VERCONF?`<p class="sens">${esc(s.conf||'—')}</p>`:'<p class="meta">Oculto</p>'}
-  </div>
+    ${VERCONF?`<p class="sens">${esc(s.conf||'—')}</p>`:'<p class="meta">Oculto</p>'}</div>
   <div class="card"><h3>Atenciones (${at.length})</h3>${at.map(a=>`<div class="item"><b>${esc(a.fecha)}</b> · ${esc(a.tipo)} · ${esc(a.duracion)} min<br><span class="sens">${esc(a.desc)}</span></div>`).join('')||'<p class="empty">Sin atenciones.</p>'}</div>
-  <div class="card"><h3>Metas</h3>${gs.map(g=>`<div class="item">${esc(g.meta)} · ${g.progreso}%<div class="bar"><div style="width:${g.progreso}%"></div></div></div>`).join('')||'<p class="empty">Sin metas.</p>'}</div>
+  <div class="card"><h3>Metas</h3>${gs.map(g=>`<div class="item">${esc(g.meta)} · ${g.progreso}%<div class="bar"><div style="width:${g.progreso}%"></div></div><span class="meta">Línea base ${esc(g.linea||'—')} → ${esc(g.final||'—')}</span></div>`).join('')||'<p class="empty">Sin metas.</p>'}</div>
   <div class="card"><h3>Reuniones</h3>${rs.map(r=>`<div class="item">${esc(r.fecha)} · ${esc(r.estado)} · ${esc(r.tema)}</div>`).join('')||'<p class="empty">Sin reuniones.</p>'}</div>
   <div class="card"><h3>Casos</h3>${cs.map(c=>`<div class="item">${esc(c.motivo)} · ${esc(c.estado)}</div>`).join('')||'<p class="empty">Sin casos.</p>'}</div>`;
 }
-/* Casos, crisis y derivaciones (Fase 3) */
-function vCasos(){
-  S.cases=S.cases||[];
-  const est=S.students.map(s=>`<option value="${s.id}">${esc(s.codigo)}</option>`).join('');
-  const lista=[...S.cases].sort((a,b)=>(a.estado==='Cerrado')-(b.estado==='Cerrado')||(b.inicio||'').localeCompare(a.inicio||'')).map(c=>`
-    <div class="item">
-      <b>${esc(c.motivo)}</b> <span class="tag ${c.riesgo?'warn':''}">${c.riesgo?'Riesgo':'Seguimiento'}</span><span class="tag">${esc(c.estado)}</span><br>
-      <span class="meta">${esc(nombreEst(c.estudiante))} · Inicio ${esc(c.inicio)} · Revisión ${esc(c.revision||'—')} · ${esc(c.responsable||'')}</span>
-      <div class="sens" style="margin-top:4px">${(c.linea||[]).map(l=>`<p class="meta">• ${esc(l.f)}: ${esc(l.t)}</p>`).join('')}</div>
-      <div style="margin-top:4px">
-        <button class="mini" onclick="avanzarCaso('${c.id}')">Avanzar estado</button>
-        <button class="mini" onclick="notaCaso('${c.id}')">+ Nota</button>
-        <button class="del" onclick="borrar('cases','${c.id}')">Eliminar</button>
-      </div>
-    </div>`).join('') || '<p class="empty">Sin casos registrados.</p>';
+function vPerfilFunc(s){
+  const p=s.perfil||{};
+  return `<div class="card"><h3>Perfil de funcionamiento</h3><p class="meta">Escala de 5 niveles por dominio (base CIF-OMS).</p>
+  ${DOMINIOS.map((d,i)=>`<div class="item"><b>${esc(d)}</b>
+    <div class="row"><select id="pf${i}d">${opts(NIV_DIF,(p[i]||{}).d||NIV_DIF[0])}</select><select id="pf${i}a">${opts(NIV_APO,(p[i]||{}).a||NIV_APO[0])}</select></div>
+    <input id="pf${i}n" placeholder="Fortalezas, barreras, estrategias" value="${esc((p[i]||{}).n||'')}"></div>`).join('')}
+  <button class="btn" onclick="guardarPerfilFunc('${s.id}')">Guardar perfil</button></div>`;
+}
+function guardarPerfilFunc(sid){
+  const s=S.students.find(x=>x.id===sid); s.perfil={};
+  DOMINIOS.forEach((d,i)=>{ s.perfil[i]={d:document.getElementById('pf'+i+'d').value,a:document.getElementById('pf'+i+'a').value,n:document.getElementById('pf'+i+'n').value.trim()}; });
+  save(); render();
+}
+function vSesiones(s){
+  const ses=(s.ses||[]).slice().sort((a,b)=>a.fecha.localeCompare(b.fecha));
+  const hechas=ses.filter(x=>x.ok).length;
+  return `<div class="card"><h3>Planificación sesión a sesión</h3>
+  <p class="meta">Realizadas: ${hechas} de ${ses.length}</p>
+  ${ses.map(x=>`<div class="item"><b>${esc(x.fecha)}</b> · ${esc(x.min)} min <span class="tag ${x.ok?'ok':''}">${x.ok?'Realizada':'Planificada'}</span><br>
+    <span class="meta">Meta: ${esc(((S.goals||[]).find(g=>g.id===x.gid)||{}).meta||'—')}<br>Objetivo: ${esc(x.obj||'—')} · Actividades: ${esc(x.act||'—')} · Materiales: ${esc(x.mat||'—')}</span>
+    <div style="margin-top:4px"><button class="mini" onclick="toggleSes('${s.id}','${x.id}')">${x.ok?'Marcar pendiente':'Marcar realizada'}</button><button class="del" onclick="delSes('${s.id}','${x.id}')">Eliminar</button></div></div>`).join('')||'<p class="empty">Sin sesiones planificadas.</p>'}
+  <input type="date" id="ses_f" value="${hoy()}">
+  <select id="ses_g"><option value="">— Vincular a una meta —</option>${(S.goals||[]).filter(g=>g.estudiante===s.id).map(g=>`<option value="${g.id}">${esc(g.meta)}</option>`).join('')}</select>
+  <input id="ses_o" placeholder="Objetivo de la sesión">
+  <textarea id="ses_a" rows="2" placeholder="Actividades"></textarea>
+  <input id="ses_m" placeholder="Materiales">
+  <input type="number" id="ses_t" value="45" placeholder="Minutos">
+  <button class="btn sec" onclick="addSes('${s.id}')">Agregar sesión</button></div>`;
+}
+function addSes(sid){
+  const s=S.students.find(x=>x.id===sid); s.ses=s.ses||[];
+  s.ses.push({id:uid(),gid:document.getElementById('ses_g').value,fecha:document.getElementById('ses_f').value||hoy(),obj:document.getElementById('ses_o').value.trim(),act:document.getElementById('ses_a').value.trim(),mat:document.getElementById('ses_m').value.trim(),min:+document.getElementById('ses_t').value||0,ok:false});
+  save(); render();
+}
+function toggleSes(sid,id){ const x=S.students.find(q=>q.id===sid).ses.find(q=>q.id===id); x.ok=!x.ok; save(); render(); }
+function delSes(sid,id){ if(!confirm('¿Eliminar esta sesión?')) return; const s=S.students.find(q=>q.id===sid); s.ses=s.ses.filter(q=>q.id!==id); save(); render(); }
+function vEvalDet(s){
+  const e=s.evalDet||{};
+  return `<div class="card"><h3>Evaluación psicoeducativa (detalle)</h3>
+  <select id="ed_tipo">${opts(['Inicial','Reevaluación','Complementaria','Seguimiento'],e.tipo||'Inicial')}</select>
+  <input id="ed_orig" placeholder="Origen de la derivación" value="${esc(e.orig||'')}">
+  <div class="row"><div><small class="meta">Fecha informe</small><input type="date" id="ed_finf" value="${esc(e.finf||'')}"></div><div><small class="meta">Consentimiento vigente</small><select id="ed_cons">${opts(['Sí','No'],e.cons||'No')}</select></div></div>
+  <input id="ed_col" placeholder="Profesionales colaboradores" value="${esc(e.col||'')}">
+  <textarea id="ed_ant" rows="2" placeholder="Antecedentes revisados">${esc(e.ant||'')}</textarea>
+  <textarea id="ed_hall" rows="3" placeholder="Hallazgos por área y conclusión">${esc(e.hall||'')}</textarea>
+  <textarea id="ed_just" rows="2" placeholder="Justificación de elegibilidad (Decreto 170/2009)">${esc(e.just||'')}</textarea>
+  <button class="btn" onclick="guardarEvalDet('${s.id}')">Guardar evaluación</button></div>`;
+}
+function guardarEvalDet(sid){
+  const s=S.students.find(x=>x.id===sid), v=id=>document.getElementById(id).value;
+  s.evalDet={tipo:v('ed_tipo'),orig:v('ed_orig').trim(),finf:v('ed_finf'),cons:v('ed_cons'),col:v('ed_col').trim(),ant:v('ed_ant').trim(),hall:v('ed_hall').trim(),just:v('ed_just').trim()};
+  save(); render();
+}
+function vInformales(s){
+  const l=(s.informales||[]).map(x=>`<div class="item"><span class="tag">${esc(x.f)}</span> ${esc(x.t)}</div>`).join('')||'<p class="empty">Sin evaluaciones informales.</p>';
+  return `<div class="card"><h3>Evaluaciones informales</h3><p class="meta">Solo en ficha; no entran al informe psicoeducativo.</p>${l}
+  <textarea id="inf_t" rows="2" placeholder="Observación de aula, entrevista, lista de chequeo..."></textarea>
+  <button class="btn sec" onclick="addInformal('${s.id}')">Agregar</button></div>`;
+}
+function addInformal(sid){
+  const t=document.getElementById('inf_t').value.trim(); if(!t) return;
+  const s=S.students.find(x=>x.id===sid); s.informales=s.informales||[]; s.informales.push({f:hoy(),t}); save(); render();
+}
+/* ===== informes ===== */
+function infEst(sid){ FICHA=sid; cur='infest'; history.pushState({v:'infest'},''); render(); window.scrollTo(0,0); }
+function vInfEst(){
+  const s=S.students.find(x=>x.id===FICHA); if(!s){ go('estudiantes'); return ''; }
+  const at=S.sessions.filter(x=>x.estudiante===s.id).sort((a,b)=>b.fecha.localeCompare(a.fecha));
+  const gs=S.goals.filter(g=>g.estudiante===s.id);
+  const ses=(s.ses||[]).slice().sort((a,b)=>a.fecha.localeCompare(b.fecha));
+  const dom=DOMINIOS.map((d,i)=>{const p=(s.perfil||{})[i]||{}; return `<p class="meta">${esc(d)}: dificultad ${esc(p.d||NIV_DIF[0])} · apoyo ${esc(p.a||NIV_APO[0])}</p>`;}).join('');
   return `
-  <h2>Seguimiento de casos</h2>
-  <div class="card" style="border-left:4px solid #dc2626">
-    <h3>Protocolo ante riesgo (guía de apoyo)</h3>
-    <p class="meta">Esta guía no reemplaza los protocolos de tu establecimiento.</p>
-    <p style="font-size:14px">1. No dejes solo al estudiante.<br>2. Informa de inmediato a dirección o convivencia escolar.<br>3. Si hay riesgo vital: SAMU 131 o Carabineros 133.<br>4. Registra la situación y los pasos en el caso.<br>5. Coordina derivación y revisión en 24 a 48 horas.</p>
-    <p style="font-size:14px"><b>Emergencias:</b> SAMU 131 · Carabineros 133 · Bomberos 132 · Fono Ayuda Infantil 102</p>
-  </div>
+  <button class="btn sec noprint" onclick="go('estudiantes')">← Volver</button>
+  <button class="btn noprint" onclick="window.print()">Imprimir / guardar PDF</button>
   <div class="card">
-    <h3>Nuevo caso</h3>
-    <select id="c_e">${est}</select>
-    <input id="c_m" placeholder="Motivo (ej: conducta en aula, bajo rendimiento)">
-    <div class="row">
-      <input type="date" id="c_i" value="${hoy()}">
-      <input type="date" id="c_r" title="Próxima revisión">
-    </div>
-    <input id="c_resp" placeholder="Responsable (ej: psicólogo PIE, UTP)">
-    <select id="c_rg"><option value="">Seguimiento</option><option value="1">Riesgo</option></select>
-    <button class="btn" onclick="addCaso()">Guardar caso</button>
-  </div>
-  <div class="card">${lista}</div>`;
+    <h2>Informe del estudiante ${esc(s.codigo)}</h2>
+    <p class="meta">Generado ${hoy()}. Solo código, sin observaciones confidenciales.</p>
+    <h3>Identificación</h3>
+    <p>Curso: ${esc(s.curso||'—')} · Estado: ${esc(s.estado)} · NEE: ${esc(s.nee||'—')}</p>
+    <h3>Evaluación PIE</h3>
+    <p class="meta">Evaluación: ${esc(s.fechaEval||'—')} · Profesional: ${esc(s.prof||'—')} · Instrumentos: ${esc(s.inst||'—')}</p>
+    <p class="meta">Elegibilidad: ${esc(s.elig||'—')} · Vigencia hasta: ${esc(vencimientoEval(s)||'—')}</p>
+    ${s.evalDet?`<p class="meta">Tipo: ${esc(s.evalDet.tipo)} · Informe: ${esc(s.evalDet.finf||'—')}</p><p>${esc(s.evalDet.hall||'')}</p><p class="meta">Justificación: ${esc(s.evalDet.just||'—')}</p>`:''}
+    <h3>Checklist normativo</h3>
+    <p class="meta">Evaluación: ${c(s,'eval')} · Informe: ${c(s,'inf')} · Consentimiento: ${c(s,'cons')} · Reunión: ${c(s,'reun')}</p>
+    <h3>Perfil de funcionamiento</h3>${dom}
+    <h3>Metas</h3>${gs.map(g=>`<p>${esc(g.meta)} · ${g.progreso}% (línea base ${esc(g.linea||'—')} → ${esc(g.final||'—')})</p>`).join('')||'<p class="empty">Sin metas.</p>'}
+    <h3>Planificación de sesiones</h3>${ses.map(x=>`<p class="meta">${esc(x.fecha)} · ${esc(x.obj||'—')} · ${x.ok?'Realizada':'Planificada'}</p>`).join('')||'<p class="empty">Sin sesiones.</p>'}
+    <h3>Atenciones (${at.length})</h3>${at.map(a=>`<p class="meta">${esc(a.fecha)} · ${esc(a.tipo)} · ${esc(a.duracion)} min</p>`).join('')||'<p class="empty">Sin atenciones.</p>'}
+  </div>`;
 }
-function addCaso(){
-  const m=document.getElementById('c_m').value.trim();
-  if(!m){ alert('Escribe el motivo'); return; }
-  S.cases=S.cases||[];
-  S.cases.push({id:uid(),estudiante:document.getElementById('c_e').value,motivo:m,
-    inicio:document.getElementById('c_i').value||hoy(),revision:document.getElementById('c_r').value,
-    responsable:document.getElementById('c_resp').value.trim(),riesgo:!!document.getElementById('c_rg').value,
-    estado:'Abierto',linea:[{f:hoy(),t:'Caso abierto'}]});
-  save(); render();
-}
-function avanzarCaso(id){
-  const c=S.cases.find(x=>x.id===id);
-  c.estado=ESTADOS_CASO[(ESTADOS_CASO.indexOf(c.estado)+1)%ESTADOS_CASO.length];
-  c.linea=c.linea||[]; c.linea.push({f:hoy(),t:'Estado: '+c.estado});
-  save(); render();
-}
-function notaCaso(id){
-  const c=S.cases.find(x=>x.id===id);
-  const t=prompt("Nota del caso. Para una derivación escribe 'Derivación: a quién, motivo'.");
-  if(!t) return;
-  c.linea=c.linea||[]; c.linea.push({f:hoy(),t:t.trim()});
-  save(); render();
-}
-/* Informes y exportación (Fase 4) */
-function csvDe(filas){
-  return filas.map(f=>f.map(v=>'"'+String(v??'').replace(/"/g,'""')+'"').join(';')).join('\n');
-}
-function descargar(nombre, texto){
-  const blob=new Blob(['\ufeff'+texto],{type:'text/csv'});
-  const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=nombre; a.click();
-}
-function exportarCSV(){
-  const est=[['Codigo','Curso','Estado','NEE','Fecha evaluacion','Reevaluacion','Profesional','Instrumentos','Elegibilidad','Derivacion','Fecha derivacion']]
-    .concat(S.students.map(s=>[s.codigo,s.curso,s.estado,s.nee,s.fechaEval,s.fechaReeval,s.prof,s.inst,s.elig,s.der,s.fder]));
-  descargar('estudiantes_'+hoy()+'.csv', csvDe(est));
-  const at=[['Fecha','Estudiante','Tipo','Minutos','Descripcion']].concat(S.sessions.map(s=>[s.fecha,nombreEst(s.estudiante),s.tipo,s.duracion,s.desc]));
-  descargar('atenciones_'+hoy()+'.csv', csvDe(at));
-}
+function c(s,k){ return (s.chk||{})[k]?'Sí':'No'; }
+/* ===== informe del período ===== */
 function vInf(){
-  const porTipo={}; S.sessions.forEach(s=>porTipo[s.tipo]=(porTipo[s.tipo]||0)+1);
-  const filas=Object.entries(porTipo).map(([k,v])=>`<p>${esc(k)}: <b>${v}</b></p>`).join('') || '<p class="empty">Sin datos.</p>';
-  const log=(S.log||[]).slice(0,20).map(l=>`<p class="meta">${esc(l.f)} · ${esc(l.a)}</p>`).join('') || '<p class="empty">Sin accesos registrados.</p>';
+  const en=s=>(!FD||s.fecha>=FD)&&(!FH||s.fecha<=FH);
+  const ses=S.sessions.filter(en);
+  const porTipo={}; ses.forEach(s=>porTipo[s.tipo]=(porTipo[s.tipo]||0)+1);
+  const porNee={}; S.students.forEach(s=>porNee[s.nee||'Sin NEE']=(porNee[s.nee||'Sin NEE']||0)+1);
+  const porMes={}; ses.forEach(s=>{const m=s.fecha.slice(0,7); porMes[m]=(porMes[m]||0)+1;});
+  const mx=Math.max(1,...Object.values(porMes));
+  const barra=(obj,mxv)=>Object.entries(obj).sort().map(([k,v])=>`<div class="item"><span class="meta">${esc(k)}</span><div class="bar"><div style="width:${v/mxv*100}%"></div></div><span class="meta">${v}</span></div>`).join('')||'<p class="empty">Sin datos.</p>';
+  const mxT=Math.max(1,...Object.values(porTipo));
+  const log=(S.log||[]).slice(0,20).map(l=>`<p class="meta">${esc(l.f)} · ${esc(l.a)}</p>`).join('')||'<p class="empty">Sin accesos registrados.</p>';
   return `
   <h2>Informes y exportación</h2>
-  <div class="card"><h3>Atenciones por tipo</h3>${filas}</div>
+  <div class="card"><h3>Filtro de fechas</h3>
+    <div class="row"><div><small class="meta">Desde</small><input type="date" value="${FD}" onchange="FD=this.value;render()"></div><div><small class="meta">Hasta</small><input type="date" value="${FH}" onchange="FH=this.value;render()"></div></div>
+    <button class="mini" onclick="FD='';FH='';render()">Quitar filtro</button>
+    <p class="meta">Atenciones en el período: ${ses.length}</p></div>
+  <div class="card"><h3>Atenciones por tipo</h3>${barra(porTipo,mxT)}</div>
+  <div class="card"><h3>Distribución por NEE</h3>${barra(porNee,Math.max(1,...Object.values(porNee)))}</div>
+  <div class="card"><h3>Tendencia mensual</h3>${barra(porMes,mx)}</div>
   <div class="card">
     <h3>Exportar</h3>
     <p class="meta">Los CSV contienen datos personales. Guárdalos en un lugar seguro.</p>
-    <button class="btn" onclick="if(confirm('Se descargarán CSV con datos sensibles. ¿Continuar?'))exportarCSV()">Exportar a CSV</button>
+    <button class="btn" onclick="if(confirm('Se descargarán CSV con datos sensibles. ¿Continuar?'))exportarCSV()">Exportar a CSV (abre en Excel)</button>
     <button class="btn" onclick="exportarICS()">Exportar calendario (.ics) para Google Calendar</button>
-    <button class="btn sec" onclick="window.print()">Imprimir informe</button>
-  </div>
+    <button class="btn sec" onclick="window.print()">Imprimir informe</button></div>
+  <div class="card"><h3>Recursos de referencia</h3><p class="meta">Consulta la normativa vigente: Decreto 170/2009 y especial.mineduc.cl.</p></div>
   <div class="card"><h3>Registro de accesos</h3>${log}</div>`;
 }
-/* Exportación a calendario (.ics): solo códigos, sin nombres */
+function csvDe(filas){ return filas.map(f=>f.map(v=>'"'+String(v??'').replace(/"/g,'""')+'"').join(';')).join('\n'); }
+function descargar(nombre,texto){ const a=document.createElement('a'); a.href=URL.createObjectURL(new Blob(['\ufeff'+texto],{type:'text/csv'})); a.download=nombre; a.click(); }
+function exportarCSV(){
+  const est=[['Codigo','Curso','Estado','NEE','Fecha evaluacion','Reevaluacion','Profesional','Instrumentos','Elegibilidad','Derivacion','Fecha derivacion']].concat(S.students.map(s=>[s.codigo,s.curso,s.estado,s.nee,s.fechaEval,s.fechaReeval,s.prof,s.inst,s.elig,s.der,s.fder]));
+  descargar('estudiantes_'+hoy()+'.csv',csvDe(est));
+  const at=[['Fecha','Estudiante','Tipo','Minutos','Descripcion']].concat(S.sessions.map(s=>[s.fecha,nombreEst(s.estudiante),s.tipo,s.duracion,s.desc]));
+  descargar('atenciones_'+hoy()+'.csv',csvDe(at));
+}
 function icsEsc(s){ return String(s??'').replace(/\\/g,'\\\\').replace(/;/g,'\\;').replace(/,/g,'\\,').replace(/\n/g,'\\n'); }
-function icsEvento(id, fecha, titulo, desc){
-  const stamp = new Date().toISOString().replace(/[-:]/g,'').slice(0,15)+'Z';
-  return ['BEGIN:VEVENT','UID:'+id+'@cmi-pie','DTSTAMP:'+stamp,
-    'DTSTART;VALUE=DATE:'+fecha.replace(/-/g,''),
-    'SUMMARY:'+icsEsc(titulo),'DESCRIPTION:'+icsEsc(desc),
-    'BEGIN:VALARM','ACTION:DISPLAY','DESCRIPTION:Recordatorio CMI PIE','TRIGGER:-P1D','END:VALARM',
-    'END:VEVENT'];
+function icsEvento(id,fecha,titulo,desc){
+  const stamp=new Date().toISOString().replace(/[-:]/g,'').slice(0,15)+'Z';
+  return ['BEGIN:VEVENT','UID:'+id+'@cmi-pie','DTSTAMP:'+stamp,'DTSTART;VALUE=DATE:'+fecha.replace(/-/g,''),'SUMMARY:'+icsEsc(titulo),'DESCRIPTION:'+icsEsc(desc),'BEGIN:VALARM','ACTION:DISPLAY','DESCRIPTION:Recordatorio CMI PIE','TRIGGER:-P1D','END:VALARM','END:VEVENT'];
 }
 function exportarICS(){
   if(!confirm('Se descargará un calendario con códigos de estudiantes y fechas. ¿Continuar?')) return;
   const ev=[];
-  S.students.filter(s=>s.fechaReeval).forEach(s=>ev.push(...icsEvento('reev-'+s.id, s.fechaReeval, 'Reevaluación PIE: '+s.codigo, 'Revisar evaluación vigente y plazos según normativa.')));
-  S.meetings.filter(r=>r.estado==='Programada'&&r.fecha).forEach(r=>ev.push(...icsEvento('reun-'+r.id, r.fecha, 'Reunión: '+nombreEst(r.estudiante), r.participantes+' · '+(r.tema||''))));
-  S.tasks.filter(t=>!t.done&&t.vence).forEach(t=>ev.push(...icsEvento('tar-'+t.id, t.vence, 'Tarea: '+t.desc, t.tipo)));
-  S.goals.filter(g=>g.plazo&&g.progreso<100).forEach(g=>ev.push(...icsEvento('meta-'+g.id, g.plazo, 'Plazo de meta: '+nombreEst(g.estudiante), g.meta)));
+  S.students.filter(s=>s.fechaReeval).forEach(s=>ev.push(...icsEvento('reev-'+s.id,s.fechaReeval,'Reevaluación PIE: '+s.codigo,'Revisar evaluación vigente según normativa.')));
+  S.meetings.filter(r=>r.estado==='Programada'&&r.fecha).forEach(r=>ev.push(...icsEvento('reun-'+r.id,r.fecha,'Reunión: '+nombreEst(r.estudiante),(r.participantes||'')+' · '+(r.tema||''))));
+  S.tasks.filter(t=>!t.done&&t.vence).forEach(t=>ev.push(...icsEvento('tar-'+t.id,t.vence,'Tarea: '+t.desc,t.tipo)));
+  S.goals.filter(g=>g.plazo&&g.progreso<100).forEach(g=>ev.push(...icsEvento('meta-'+g.id,g.plazo,'Plazo de meta: '+nombreEst(g.estudiante),g.meta)));
   if(!ev.length){ alert('No hay fechas para exportar.'); return; }
   const cal=['BEGIN:VCALENDAR','VERSION:2.0','PRODID:-//CMI PIE//ES','CALSCALE:GREGORIAN','METHOD:PUBLISH',...ev,'END:VCALENDAR'].join('\r\n');
-  const blob=new Blob([cal],{type:'text/calendar;charset=utf-8'});
-  const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='cmi_pie_calendario_'+hoy()+'.ics'; a.click();
+  const a=document.createElement('a'); a.href=URL.createObjectURL(new Blob([cal],{type:'text/calendar;charset=utf-8'})); a.download='cmi_pie_calendario_'+hoy()+'.ics'; a.click();
+}
+/* ===== casos ===== */
+function vCasos(){
+  S.cases=S.cases||[];
+  const lista=[...S.cases].sort((a,b)=>(a.estado==='Cerrado')-(b.estado==='Cerrado')||(b.inicio||'').localeCompare(a.inicio||'')).map(c=>`
+    <div class="item"><b>${esc(c.motivo)}</b> <span class="tag ${c.riesgo?'warn':''}">${c.riesgo?'Riesgo':'Seguimiento'}</span><span class="tag">${esc(c.estado)}</span><br>
+      <span class="meta">${esc(nombreEst(c.estudiante))} · Inicio ${esc(c.inicio)} · Revisión ${esc(c.revision||'—')} · ${esc(c.responsable||'')}</span>
+      <div class="sens" style="margin-top:4px">${(c.linea||[]).map(l=>`<p class="meta">• ${esc(l.f)}: ${esc(l.t)}</p>`).join('')}</div>
+      <div style="margin-top:4px"><button class="mini" onclick="avanzarCaso('${c.id}')">Avanzar estado</button><button class="mini" onclick="notaCaso('${c.id}')">+ Nota</button><button class="del" onclick="borrar('cases','${c.id}')">Eliminar</button></div></div>`).join('')||'<p class="empty">Sin casos registrados.</p>';
+  return `
+  <h2>Seguimiento de casos</h2>
+  <div class="card" style="border-left:4px solid #dc2626"><h3>Protocolo ante riesgo (guía de apoyo)</h3>
+    <p class="meta">Esta guía no reemplaza los protocolos de tu establecimiento.</p>
+    <p style="font-size:14px">1. No dejes solo al estudiante.<br>2. Informa de inmediato a dirección o convivencia escolar.<br>3. Si hay riesgo vital: SAMU 131 o Carabineros 133.<br>4. Registra la situación y los pasos en el caso.<br>5. Coordina derivación y revisión en 24 a 48 horas.</p>
+    <p style="font-size:14px"><b>Emergencias:</b> SAMU 131 · Carabineros 133 · Bomberos 132 · Fono Ayuda Infantil 102</p></div>
+  <div class="card"><h3>Nuevo caso</h3>
+    <select id="c_e">${S.students.map(s=>`<option value="${s.id}">${esc(s.codigo)}</option>`).join('')}</select>
+    <input id="c_m" placeholder="Motivo (ej: conducta en aula, bajo rendimiento)">
+    <div class="row"><input type="date" id="c_i" value="${hoy()}"><input type="date" id="c_r" title="Próxima revisión"></div>
+    <input id="c_resp" placeholder="Responsable (ej: psicólogo PIE, UTP)">
+    <select id="c_rg"><option value="">Seguimiento</option><option value="1">Riesgo</option></select>
+    <button class="btn" onclick="addCaso()">Guardar caso</button></div>
+  <div class="card">${lista}</div>`;
+}
+function addCaso(){
+  const m=document.getElementById('c_m').value.trim(); if(!m){ alert('Escribe el motivo'); return; }
+  S.cases=S.cases||[];
+  S.cases.push({id:uid(),estudiante:document.getElementById('c_e').value,motivo:m,inicio:document.getElementById('c_i').value||hoy(),revision:document.getElementById('c_r').value,responsable:document.getElementById('c_resp').value.trim(),riesgo:!!document.getElementById('c_rg').value,estado:'Abierto',linea:[{f:hoy(),t:'Caso abierto'}]});
+  save(); render();
+}
+function avanzarCaso(id){ const c=S.cases.find(x=>x.id===id); c.estado=ESTADOS_CASO[(ESTADOS_CASO.indexOf(c.estado)+1)%ESTADOS_CASO.length]; c.linea=c.linea||[]; c.linea.push({f:hoy(),t:'Estado: '+c.estado}); save(); render(); }
+function notaCaso(id){ const c=S.cases.find(x=>x.id===id); const t=prompt("Nota del caso. Para una derivación escribe 'Derivación: a quién, motivo'."); if(!t) return; c.linea=c.linea||[]; c.linea.push({f:hoy(),t:t.trim()}); save(); render(); }
+/* ===== planificador semanal ===== */
+function vPlanif(){
+  S.plan=S.plan||[];
+  const dias=['Lunes','Martes','Miércoles','Jueves','Viernes'];
+  const tot=S.plan.reduce((a,p)=>a+(+p.min||0),0);
+  const dir=S.plan.filter(p=>p.tipo==='Atención directa').reduce((a,p)=>a+(+p.min||0),0);
+  const pct=tot?Math.round(dir/tot*100):0;
+  const lista=dias.map(d=>{const bl=S.plan.filter(p=>p.dia===d).sort((a,b)=>a.hora.localeCompare(b.hora)); return `<div class="item"><b>${d}</b>${bl.map(p=>`<div class="meta">${esc(p.hora)} · ${esc(p.tipo)} · ${esc(p.min)} min${p.nota?' · '+esc(p.nota):''} <button class="del" onclick="borrar('plan','${p.id}')">×</button></div>`).join('')||'<div class="meta">Sin bloques</div>'}</div>`;}).join('');
+  return `<h2>Planificación semanal</h2>
+  <div class="card"><h3>Jornada</h3><p>Atención directa: <b>${pct}%</b> del tiempo planificado (${tot} min)</p><div class="bar"><div style="width:${pct}%"></div></div></div>
+  <div class="card"><h3>Nuevo bloque</h3>
+    <div class="row"><select id="pl_d">${opts(dias,'')}</select><input type="time" id="pl_h"></div>
+    <div class="row"><select id="pl_t">${opts(['Atención directa','Atención indirecta','Coordinación','Administrativa','Formación','Reunión institucional'],'')}</select><input type="number" id="pl_m" value="45" placeholder="Minutos"></div>
+    <input id="pl_n" placeholder="Nota (opcional)">
+    <button class="btn" onclick="addPlan()">Agregar bloque</button></div>
+  <div class="card">${lista}</div>`;
+}
+function addPlan(){
+  const h=document.getElementById('pl_h').value; if(!h){ alert('Indica la hora'); return; }
+  S.plan=S.plan||[];
+  S.plan.push({id:uid(),dia:document.getElementById('pl_d').value,hora:h,tipo:document.getElementById('pl_t').value,min:+document.getElementById('pl_m').value||0,nota:document.getElementById('pl_n').value.trim()});
+  save(); render();
 }
 boot();
 </script>
