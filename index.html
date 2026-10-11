@@ -6,7 +6,7 @@
 <meta name="theme-color" content="#1e3a5f">
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="icon-192.png">
-<title>CMI PIE - Franco Espinoza Aparicio</title>
+<title>CMI PIE</title>
 <style>
 *{box-sizing:border-box}
 body{margin:0;font-family:system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;background:#eef2f7;color:#1e293b;padding-bottom:84px}
@@ -52,27 +52,29 @@ button.del{background:#fee2e2;color:#b91c1c;border:0;padding:4px 8px;border-radi
 <body>
 <header>
   <h1>CMI Psicólogo PIE</h1>
-  <small>Franco Espinoza Aparicio</small>
+  <small id="hdrSub"></small>
 </header>
-
 <main id="app"></main>
 <nav id="nav"></nav>
-
 <script>
-const VKEY = 'cmi_pie_franco_vault_v2';
+const PKEY = 'cmi_pie_perfiles_v3';
+const VKEY_LEGACY = 'cmi_pie_franco_vault_v2';
+let PID = null;
+function getPerfiles(){ try{ return JSON.parse(localStorage.getItem(PKEY))||[]; }catch(e){ return []; } }
+function setPerfiles(l){ localStorage.setItem(PKEY, JSON.stringify(l)); }
+function perfilActual(){ return getPerfiles().find(p=>p.id===PID); }
+function vk(){ return (perfilActual()||{}).vk || VKEY_LEGACY; }
+function setHdr(){ const p=perfilActual(); document.getElementById('hdrSub').textContent = p ? p.nombre+(p.cargo?' · '+p.cargo:'') : 'CMI PIE'; }
 const TIPOS_NEE = ['TEA','TDAH','Discapacidad Intelectual','Trastorno Específico del Lenguaje (TEL)','Discapacidad Auditiva','Discapacidad Visual','Disfasia','Funcionamiento Intelectual Limítrofe','Dificultades Específicas del Aprendizaje (DEA)','Trastorno de Déficit Atencional','Otra'];
 const TIPOS_ATENCION = ['Intervención individual','Intervención grupal','Evaluación psicoeducativa','Entrevista familia','Coordinación docente','Observación de aula','Capacitación / Formación','Otra'];
 const MIN_INACTIVO = 5*60*1000;
-
 const enc = new TextEncoder();
 const dec = new TextDecoder();
-
 let S = null;      // datos en memoria (solo con la app desbloqueada)
 let CK = null;     // clave AES derivada del PIN (solo en memoria)
 let SALT = null;   // sala de derivación guardada en base64
 let cur = 'inicio';
 let timer = null;
-
 /* ================= CRIPTOGRAFÍA ================= */
 function b64(buf){
   const bytes = new Uint8Array(buf); let s='';
@@ -80,7 +82,6 @@ function b64(buf){
   return btoa(s);
 }
 function unb64(str){ return Uint8Array.from(atob(str), c=>c.charCodeAt(0)); }
-
 async function deriveKey(pin, salt){
   const base = await crypto.subtle.importKey('raw', enc.encode(pin), 'PBKDF2', false, ['deriveKey']);
   return crypto.subtle.deriveKey(
@@ -98,18 +99,23 @@ async function descifrar(clave, ivB64, ctB64){
   return dec.decode(pt);
 }
 function pinValido(p){ return /^\d{6,12}$/.test(p); }
-
 async function guardar(){
   const c = await cifrar(CK, JSON.stringify(S));
-  localStorage.setItem(VKEY, JSON.stringify({v:2, salt:SALT, iv:c.iv, ct:c.ct}));
+  localStorage.setItem(vk(), JSON.stringify({v:2, salt:SALT, iv:c.iv, ct:c.ct}));
 }
 function save(){ guardar().catch(()=>alert('No se pudo guardar de forma cifrada.')); }
-
 /* ================= ACCESO, PIN Y BLOQUEO ================= */
 function boot(){
-  if(localStorage.getItem(VKEY)) showLock(); else showSetup();
+  if(!localStorage.getItem(PKEY) && localStorage.getItem(VKEY_LEGACY)){
+    setPerfiles([{id:'franco',nombre:'Franco Espinoza Aparicio',cargo:'Psicólogo PIE',vk:VKEY_LEGACY,fallos:0,bloqueadoHasta:0}]);
+  }
+  const l=getPerfiles();
+  if(!l.length){ showSetup(); return; }
+  if(l.length===1){ PID=l[0].id; showLock(); return; }
+  showPerfiles();
 }
 function renderNav(on){
+  setHdr();
   const nav = document.getElementById('nav');
   nav.innerHTML = on ? Object.keys(vistas).map(k=>
     `<button class="${k===cur?'act':''}" onclick="go('${k}')">${vistas[k].i}<br>${vistas[k].t}</button>`).join('') : '';
@@ -118,7 +124,10 @@ function showSetup(){
   S=null; CK=null; renderNav(false);
   document.getElementById('app').innerHTML = `
   <div class="card">
-    <h2>Crear PIN</h2>
+    <h2>Nuevo perfil</h2>
+    <input id="pNom" placeholder="Nombre (ej. Ana Pérez)">
+    <input id="pCar" placeholder="Cargo (ej. Psicóloga PIE)">
+    <p class="meta">PIN de este perfil:</p>
     <p class="meta">El PIN abre la app y cifra tus datos en este equipo. Si lo olvidas, los datos no se pueden recuperar, por eso conviene hacer respaldos cifrados.</p>
     <input id="pin1" type="password" inputmode="numeric" maxlength="12" placeholder="PIN (6 a 12 números)">
     <input id="pin2" type="password" inputmode="numeric" maxlength="12" placeholder="Repite el PIN">
@@ -135,16 +144,79 @@ async function crearPin(){
   const salt = crypto.getRandomValues(new Uint8Array(16));
   SALT = b64(salt);
   CK = await deriveKey(p1, salt);
+  const nom=(document.getElementById('pNom').value||'').trim()||'Sin nombre';
+  const car=(document.getElementById('pCar').value||'').trim();
+  const id=uid();
+  const lista=getPerfiles();
+  lista.push({id,nombre:nom,cargo:car,vk:'cmi_pie_vault_'+id,fallos:0,bloqueadoHasta:0});
+  setPerfiles(lista); PID=id;
   S = {students:[],sessions:[],goals:[],meetings:[],tasks:[],formacion:0};
   await guardar();
   iniciarSesion();
 }
+function showPerfiles(){
+  S=null; CK=null; PID=null; clearTimeout(timer); renderNav(false);
+  const l=getPerfiles();
+  document.getElementById('app').innerHTML = `
+  <div class="card">
+    <h2>Perfiles</h2>
+    <p class="meta">Cada perfil tiene su propio PIN y sus datos cifrados.</p>
+    ${l.map(p=>`<div class="item"><button class="btn" onclick="elegirPerfil('${p.id}')">${esc(p.nombre)}${p.cargo?' · '+esc(p.cargo):''}</button><button class="mini" onclick="editarPerfil('${p.id}')">Editar</button><button class="del" onclick="eliminarPerfil('${p.id}')">Eliminar</button></div>`).join('')}
+    <button class="btn sec" onclick="showSetup()">+ Nuevo perfil</button>
+  </div>`;
+}
+function elegirPerfil(id){ PID=id; showLock(); }
+function editarPerfil(id){
+  const l=getPerfiles(); const p=l.find(x=>x.id===id); if(!p) return;
+  const n=prompt('Nombre del perfil:',p.nombre); if(n===null) return;
+  const c=prompt('Cargo:',p.cargo||''); if(c===null) return;
+  p.nombre=n.trim()||p.nombre; p.cargo=c.trim(); setPerfiles(l); showPerfiles();
+}
+async function eliminarPerfil(id){
+  const p=getPerfiles().find(x=>x.id===id); if(!p) return;
+  const pin=prompt('Para eliminar "'+p.nombre+'" ingresa su PIN:'); if(pin===null) return;
+  try{
+    const v=JSON.parse(localStorage.getItem(p.vk));
+    if(v){ const clave=await deriveKey(pin, unb64(v.salt)); await descifrar(clave,v.iv,v.ct); }
+  }catch(e){ alert('PIN incorrecto.'); return; }
+  if(!confirm('Esta acción borra todos los datos de este perfil y no se puede deshacer. ¿Continuar?')) return;
+  localStorage.removeItem(p.vk);
+  setPerfiles(getPerfiles().filter(x=>x.id!==id));
+  showPerfiles();
+}
+function olvidePin(){
+  const inp=document.createElement('input'); inp.type='file'; inp.accept='application/json';
+  inp.onchange=async()=>{
+    const f=inp.files[0]; if(!f) return;
+    try{
+      const obj=JSON.parse(await f.text());
+      if(obj.formato!=='cmi-pie-respaldo') throw new Error('formato');
+      const pw=prompt('Contraseña de ese respaldo:'); if(pw===null) return;
+      const clave0=await deriveKey(pw, unb64(obj.salt));
+      const datos=JSON.parse(await descifrar(clave0,obj.iv,obj.ct));
+      const p1=prompt('Nuevo PIN para este perfil (6 a 12 números):'); if(p1===null) return;
+      if(!pinValido(p1)){ alert('El PIN debe tener entre 6 y 12 números.'); return; }
+      const p2=prompt('Repite el nuevo PIN:'); if(p1!==p2){ alert('Los PIN no coinciden.'); return; }
+      const salt=crypto.getRandomValues(new Uint8Array(16));
+      SALT=b64(salt); CK=await deriveKey(p1,salt);
+      S={students:[],sessions:[],goals:[],meetings:[],tasks:[],formacion:0,...datos};
+      await guardar();
+      S=null; CK=null;
+      alert('PIN restablecido. Ingresa con el nuevo PIN.');
+      showLock();
+    }catch(e){ alert('No se pudo restablecer: respaldo no válido o contraseña incorrecta.'); }
+  };
+  inp.click();
+}
+function cambiarPerfil(){ showPerfiles(); }
 function showLock(){
   S=null; CK=null; clearTimeout(timer); renderNav(false);
   document.getElementById('app').innerHTML = `
   <div class="card">
     <h2>App bloqueada</h2>
-    <p class="meta">Ingresa tu PIN para continuar.</p>
+    <p class="meta">Ingresa el PIN de este perfil.</p>
+    <button class="btn sec" onclick="showPerfiles()">Cambiar perfil</button>
+    <button class="mini" onclick="olvidePin()">¿Olvidaste el PIN? Restablecer con respaldo</button>
     <input id="pin" type="password" inputmode="numeric" maxlength="12" placeholder="PIN" onkeydown="if(event.key==='Enter')desbloquear()">
     <button class="btn" onclick="desbloquear()">Desbloquear</button>
     <p class="err" id="pinErr"></p>
@@ -155,14 +227,19 @@ async function desbloquear(){
   const err = document.getElementById('pinErr');
   if(!pinValido(pin)){ err.textContent='El PIN debe tener entre 6 y 12 números.'; return; }
   try{
-    const v = JSON.parse(localStorage.getItem(VKEY));
+    const pf = perfilActual();
+    if(pf && pf.bloqueadoHasta>Date.now()){ err.textContent='Espera '+Math.ceil((pf.bloqueadoHasta-Date.now())/1000)+' s antes de reintentar.'; return; }
+    const v = JSON.parse(localStorage.getItem(vk()));
     const clave = await deriveKey(pin, unb64(v.salt));
     const texto = await descifrar(clave, v.iv, v.ct);
     S = JSON.parse(texto);
     CK = clave; SALT = v.salt;
+    const lp=getPerfiles(); const qp=lp.find(x=>x.id===PID); if(qp){ qp.fallos=0; qp.bloqueadoHasta=0; setPerfiles(lp); }
     iniciarSesion();
   }catch(e){
-    err.textContent='PIN incorrecto.';
+    const lp=getPerfiles(); const qp=lp.find(x=>x.id===PID);
+    if(qp){ qp.fallos=(qp.fallos||0)+1; if(qp.fallos>=5){ qp.bloqueadoHasta=Date.now()+Math.min(600,30*(qp.fallos-4))*1000; } setPerfiles(lp); }
+    err.textContent='PIN incorrecto.'+(qp&&qp.fallos>=5?' Espera antes de reintentar.':'');
   }
 }
 function iniciarSesion(){
@@ -174,7 +251,6 @@ function resetTimer(){
   if(CK) timer = setTimeout(bloquear, MIN_INACTIVO);
 }
 ['pointerdown','keydown'].forEach(ev=>document.addEventListener(ev, resetTimer));
-
 async function cambiarPin(){
   if(!CK) return;
   const p1 = prompt('Nuevo PIN (6 a 12 números):');
@@ -188,7 +264,6 @@ async function cambiarPin(){
   await guardar();
   alert('PIN cambiado correctamente.');
 }
-
 /* ================= NAVEGACIÓN Y CMI ================= */
 let _dummy = null;
 function load(){ return S; }
@@ -200,7 +275,6 @@ function diasDesde(f){ return Math.floor((new Date(hoy()) - new Date(f))/8640000
 function nombreEst(id){ const e=S.students.find(x=>x.id===id); return e? e.codigo : '—'; }
 function opts(arr, sel){ return arr.map(o=>`<option ${o===sel?'selected':''}>${esc(o)}</option>`).join(''); }
 function studentOpts(sel){ return S.students.map(s=>`<option value="${s.id}" ${s.id===sel?'selected':''}>${esc(s.codigo)} - ${esc(s.nee)}</option>`).join(''); }
-
 const vistas = {
   inicio:{t:'Inicio',i:'📊'},
   estudiantes:{t:'Estudiantes',i:'👦'},
@@ -212,7 +286,6 @@ const vistas = {
   informes:{t:'Informes',i:'📄'},
   respaldo:{t:'Respaldo',i:'💾'}
 };
-
 function render(){
   if(!S) return;
   renderNav(true);
@@ -220,7 +293,6 @@ function render(){
   document.getElementById('app').innerHTML = fn();
 }
 function go(v){ cur=v; render(); window.scrollTo(0,0); resetTimer(); }
-
 function vInicio(){
   const activos = S.students.filter(s=>s.estado==='Activo');
   const atMes = S.sessions.filter(s=>s.fecha.startsWith(mesActual()));
@@ -241,7 +313,6 @@ function vInicio(){
   });
   const formacion = S.sessions.filter(s=>s.tipo==='Capacitación / Formación').reduce((a,s)=>a+(+s.duracion||0),0)/60;
   const vencidas = S.tasks.filter(t=>!t.done && t.vence && t.vence<hoy()).length;
-
   const lim30 = new Date(Date.now()+30*86400000).toISOString().slice(0,10);
   const reevalProx = activos.filter(s=>s.fechaReeval && s.fechaReeval>=hoy() && s.fechaReeval<=lim30);
   const metasVenc = S.goals.filter(g=>g.plazo && g.plazo<hoy() && g.progreso<100).length;
@@ -260,7 +331,7 @@ function vInicio(){
   return `
   <div class="card" style="background:linear-gradient(135deg,#1e3a5f,#2d5a8c);color:#fff;border:0">
     <div style="font-size:13px;opacity:.85">${saludo}</div>
-    <div style="font-size:19px;font-weight:700">Hola, Franco</div>
+    <div style="font-size:19px;font-weight:700">Hola, ${esc((perfilActual()||{nombre:''}).nombre.split(' ')[0])}</div>
     <div style="font-size:13px;margin-top:4px;opacity:.9;text-transform:capitalize">${fechaTxt}</div>
   </div>
   <div class="card" style="border-left:4px solid #c9a227">
@@ -273,9 +344,7 @@ function vInicio(){
     <div class="kpi"><b>${avgMetas}%</b><span>Avance promedio de metas</span></div>
     <div class="kpi"><b>${vencidas}</b><span>Tareas vencidas</span></div>
   </div>
-
   <h2>Cuadro de Mando Integral</h2>
-
   <div class="card persp">
     <h3>1. Perspectiva Estudiantes (impacto)</h3>
     <p>Metas logradas: <b>${metasLogradas}</b> de ${metas.length}</p>
@@ -283,7 +352,6 @@ function vInicio(){
     <div class="bar"><div style="width:${avgMetas}%"></div></div>
     <p class="meta">Meta sugerida: ≥ 70% de avance promedio al cierre de semestre.</p>
   </div>
-
   <div class="card persp">
     <h3>2. Procesos internos (gestión)</h3>
     <p>Atenciones registradas: <b>${S.sessions.length}</b></p>
@@ -291,14 +359,12 @@ function vInicio(){
     <p>Estudiantes activos sin atención en 30 días: <b class="${sinAtencion.length?'late':''}">${sinAtencion.length}</b></p>
     ${sinAtencion.length? '<p class="meta">'+sinAtencion.slice(0,8).map(s=>esc(s.codigo)).join(', ')+'</p>':''}
   </div>
-
   <div class="card persp">
     <h3>3. Familias y comunidad</h3>
     <p>Reuniones realizadas: <b>${reunRealizadas}</b> de ${reun.length}</p>
     <div class="bar"><div style="width:${pctReun}%"></div></div>
     <p class="meta">Meta sugerida: al menos una reunión por semestre con cada familia.</p>
   </div>
-
   <div class="card persp">
     <h3>4. Aprendizaje y desarrollo profesional</h3>
     <p>Horas de formación registradas: <b>${formacion.toFixed(1)}</b></p>
@@ -307,7 +373,6 @@ function vInicio(){
   </div>
   `;
 }
-
 /* ================= ESTUDIANTES ================= */
 function vEst(){
   const lista = S.students.map(s=>`
@@ -322,7 +387,6 @@ function vEst(){
         <button class="del" onclick="borrar('students','${s.id}')">Eliminar</button>
       </div>
     </div>`).join('') || '<p class="empty">Sin estudiantes registrados.</p>';
-
   return `
   <h2>Estudiantes PIE</h2>
   <div class="card">
@@ -368,7 +432,6 @@ function borrar(col,id){
   if(!confirm('¿Eliminar este registro?')) return;
   S[col]=S[col].filter(x=>x.id!==id); save(); render();
 }
-
 /* ================= ATENCIONES ================= */
 function vAt(){
   const lista=[...S.sessions].filter(s=>!FILTRO||(nombreEst(s.estudiante)+' '+s.tipo+' '+s.desc).toLowerCase().includes(FILTRO)).sort((a,b)=>b.fecha.localeCompare(a.fecha)).map(s=>`
@@ -379,7 +442,6 @@ function vAt(){
       <span class="sens">${esc(s.desc)}</span>
       <div style="margin-top:4px"><button class="mini" onclick="editarAt('${s.id}')">Editar</button><button class="del" onclick="borrar('sessions','${s.id}')">Eliminar</button></div>
     </div>`).join('') || '<p class="empty">Sin atenciones registradas.</p>';
-
   return `
   <h2>Registro de atenciones</h2>
   <input placeholder="Buscar por estudiante, tipo o texto" value="${esc(FILTRO)}" onchange="FILTRO=this.value.toLowerCase();render()">
@@ -404,7 +466,6 @@ function addAt(){
     estudiante:document.getElementById('a_e').value,desc});
   save(); render();
 }
-
 /* ================= PLANES / METAS ================= */
 function vPlanes(){
   const lista=S.goals.map(g=>`
@@ -419,7 +480,6 @@ function vPlanes(){
         <button class="del" onclick="borrar('goals','${g.id}')">Eliminar</button>
       </div>
     </div>`).join('') || '<p class="empty">Sin metas registradas.</p>';
-
   return `
   <h2>Planes de apoyo y metas</h2>
   <div class="card">
@@ -447,7 +507,6 @@ function setProg(id){
   if(v===null) return;
   g.progreso=Math.max(0,Math.min(100,+v||0)); save(); render();
 }
-
 /* ================= FAMILIAS ================= */
 function vFam(){
   const lista=[...S.meetings].sort((a,b)=>b.fecha.localeCompare(a.fecha)).map(r=>`
@@ -460,7 +519,6 @@ function vFam(){
         <button class="del" onclick="borrar('meetings','${r.id}')">Eliminar</button>
       </div>
     </div>`).join('') || '<p class="empty">Sin reuniones registradas.</p>';
-
   return `
   <h2>Reuniones con familias y equipo</h2>
   <div class="card">
@@ -488,7 +546,6 @@ function cambiarReun(id){
   r.estado=orden[(orden.indexOf(r.estado)+1)%orden.length];
   save(); render();
 }
-
 /* ================= TAREAS ================= */
 function vTar(){
   const lista=[...S.tasks].sort((a,b)=>(a.done-b.done)||(a.vence||'9999').localeCompare(b.vence||'9999')).map(t=>{
@@ -500,7 +557,6 @@ function vTar(){
       <span class="meta ${venc?'late':''}">Vence: ${esc(t.vence||'—')}${venc?' (vencida)':''}</span>
       <div style="margin-top:4px"><button class="del" onclick="borrar('tasks','${t.id}')">Eliminar</button></div>
     </div>`;}).join('') || '<p class="empty">Sin tareas.</p>';
-
   return `
   <h2>Tareas y gestión</h2>
   <div class="card">
@@ -524,7 +580,6 @@ function addTarea(){
 function toggleTarea(id){
   const t=S.tasks.find(x=>x.id===id); t.done=!t.done; save(); render();
 }
-
 /* ================= RESPALDO ================= */
 function vRes(){
   return `
@@ -542,6 +597,7 @@ function vRes(){
     <h3>Acceso</h3>
     <button class="btn sec" onclick="cambiarPin()">Cambiar PIN</button>
     <button class="btn sec" onclick="bloquear()">Bloquear ahora</button>
+    <button class="btn sec" onclick="cambiarPerfil()">Cambiar de perfil</button>
     <button class="btn sec" onclick="togglePres()">Modo presentación (on/off)</button>
   </div>
   <div class="card">
@@ -591,19 +647,18 @@ function importar(input){
   r.readAsText(f);
 }
 function borrarTodo(){
-  if(!confirm('¿Borrar TODOS los datos y el PIN? Esta acción no se puede deshacer.')) return;
-  localStorage.removeItem(VKEY);
+  if(!confirm('¿Borrar este perfil y todos sus datos? Esta acción no se puede deshacer.')) return;
+  localStorage.removeItem(vk());
+  setPerfiles(getPerfiles().filter(p=>p.id!==PID)); PID=null;
   clearTimeout(timer);
-  showSetup();
+  showPerfiles();
 }
-
 /* ================= FASE 1 A 6 (sin huella) ================= */
 let FILTRO='';
 let PRES=false;
 let FICHA=null;
 let VERCONF=false;
 const ESTADOS_CASO=['Abierto','En seguimiento','Derivado','Cerrado'];
-
 function registrar(acc){
   if(!S) return;
   S.log=S.log||[];
@@ -638,7 +693,6 @@ function editarAt(id){
   const f=prompt('Fecha (AAAA-MM-DD):', s.fecha); if(f===null) return;
   s.desc=d.trim(); s.fecha=f.trim()||s.fecha; save(); render();
 }
-
 /* Ficha 360 */
 function verFicha(id){ FICHA=id; VERCONF=false; cur='ficha'; render(); window.scrollTo(0,0); }
 function vFicha(){
@@ -674,7 +728,6 @@ function vFicha(){
   <div class="card"><h3>Reuniones</h3>${rs.map(r=>`<div class="item">${esc(r.fecha)} · ${esc(r.estado)} · ${esc(r.tema)}</div>`).join('')||'<p class="empty">Sin reuniones.</p>'}</div>
   <div class="card"><h3>Casos</h3>${cs.map(c=>`<div class="item">${esc(c.motivo)} · ${esc(c.estado)}</div>`).join('')||'<p class="empty">Sin casos.</p>'}</div>`;
 }
-
 /* Casos, crisis y derivaciones (Fase 3) */
 function vCasos(){
   S.cases=S.cases||[];
@@ -735,7 +788,6 @@ function notaCaso(id){
   c.linea=c.linea||[]; c.linea.push({f:hoy(),t:t.trim()});
   save(); render();
 }
-
 /* Informes y exportación (Fase 4) */
 function csvDe(filas){
   return filas.map(f=>f.map(v=>'"'+String(v??'').replace(/"/g,'""')+'"').join(';')).join('\n');
@@ -767,7 +819,6 @@ function vInf(){
   </div>
   <div class="card"><h3>Registro de accesos</h3>${log}</div>`;
 }
-
 /* Exportación a calendario (.ics): solo códigos, sin nombres */
 function icsEsc(s){ return String(s??'').replace(/\\/g,'\\\\').replace(/;/g,'\\;').replace(/,/g,'\\,').replace(/\n/g,'\\n'); }
 function icsEvento(id, fecha, titulo, desc){
@@ -790,7 +841,6 @@ function exportarICS(){
   const blob=new Blob([cal],{type:'text/calendar;charset=utf-8'});
   const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='cmi_pie_calendario_'+hoy()+'.ics'; a.click();
 }
-
 boot();
 </script>
 </body>
