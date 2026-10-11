@@ -69,6 +69,7 @@ body.ro main input:not(.permite),body.ro main select:not(.permite),body.ro main 
   <h1>CMI Psicólogo PIE</h1>
   <small id="hdrSub"></small>
 </header>
+<div id="privOv" style="display:none;position:fixed;inset:0;background:#0b1d33;color:#fff;z-index:99;align-items:center;justify-content:center;font-size:18px">CMI PIE · contenido protegido</div>
 <main id="app"></main>
 <button class="fab noprint" id="fab" onclick="nuevaAtencion()" title="Nueva atención">+</button>
 <nav id="nav" class="noprint"></nav>
@@ -255,6 +256,7 @@ function render(){
   document.getElementById('app').innerHTML=(FN[cur]||vInicio)();
 }
 function go(v,push=true){
+  if(cur==='atenciones'&&v!=='atenciones'&&DRAFT&&!confirm('Tienes una atención sin guardar. ¿Salir igual?')) return;
   cur=v; if(push&&history.pushState) history.pushState({v},'');
   render(); window.scrollTo(0,0); resetTimer();
 }
@@ -346,11 +348,16 @@ function vInicio(){
   <div class="card persp"><h3>3. Familias y comunidad</h3>
     <p>Reuniones realizadas: <b>${reunRe}</b> de ${S.meetings.length}</p>
     <div class="bar"><div style="width:${pctReun}%"></div></div></div>
-  <div class="card persp"><h3>4. Aprendizaje y desarrollo profesional</h3>
+  <div class="card persp"><h3>4. Recursos y tiempo</h3>
+    <p>Atención directa planificada: <b>${pctDirecta()}%</b> de la jornada</p>
+    <div class="bar"><div style="width:${pctDirecta()}%"></div></div>
+    <p class="meta">Revisa el detalle en la pestaña Plan.</p></div>
+  <div class="card persp"><h3>5. Aprendizaje y desarrollo profesional</h3>
     <p>Horas de formación: <b>${formacion.toFixed(1)}</b></p>
     <p>Tareas completadas: <b>${pctTareas}%</b></p>
     <div class="bar"><div style="width:${pctTareas}%"></div></div></div>`;
 }
+function pctDirecta(){ const p=S.plan||[]; const tot=p.reduce((a,x)=>a+(+x.min||0),0); const d=p.filter(x=>x.tipo==='Atención directa').reduce((a,x)=>a+(+x.min||0),0); return tot?Math.round(d/tot*100):0; }
 /* ===== semáforo y checklist ===== */
 function semaforo(s){
   const venc=vencimientoEval(s);
@@ -625,7 +632,8 @@ async function exportar(){
   if(pw.length<6){ alert('La contraseña debe tener al menos 6 caracteres.'); return; }
   const salt=crypto.getRandomValues(new Uint8Array(16));
   const c=await cifrar(await deriveKey(pw,salt),JSON.stringify(S));
-  const out=JSON.stringify({formato:'cmi-pie-respaldo',v:2,salt:b64(salt),iv:c.iv,ct:c.ct});
+  const h=b64(await crypto.subtle.digest('SHA-256',enc.encode(c.ct)));
+  const out=JSON.stringify({formato:'cmi-pie-respaldo',v:2,salt:b64(salt),iv:c.iv,ct:c.ct,sha:h});
   const a=document.createElement('a'); a.href=URL.createObjectURL(new Blob([out],{type:'application/json'}));
   a.download='respaldo_cifrado_cmi_pie_'+hoy()+'.json'; a.click();
   cfg().ultimoRespaldo=hoy(); save();
@@ -637,6 +645,7 @@ function importar(input){
     try{
       const obj=JSON.parse(r.result); let nuevo;
       if(obj.formato==='cmi-pie-respaldo'){
+        if(obj.sha){ const h2=b64(await crypto.subtle.digest('SHA-256',enc.encode(obj.ct))); if(h2!==obj.sha) throw new Error('integridad'); }
         const pw=prompt('Contraseña del respaldo:'); if(pw===null){ input.value=''; return; }
         nuevo=JSON.parse(await descifrar(await deriveKey(pw,unb64(obj.salt)),obj.iv,obj.ct));
       } else if(obj.students){
@@ -923,6 +932,7 @@ function addPlan(){
   S.plan.push({id:uid(),dia:document.getElementById('pl_d').value,hora:h,tipo:document.getElementById('pl_t').value,min:+document.getElementById('pl_m').value||0,nota:document.getElementById('pl_n').value.trim()});
   save(); render();
 }
+document.addEventListener('visibilitychange',()=>{const o=document.getElementById('privOv'); if(o) o.style.display=document.hidden?'flex':'none';});
 boot();
 </script>
 </body>
