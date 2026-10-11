@@ -76,7 +76,7 @@ body.ro main input:not(.permite),body.ro main select:not(.permite),body.ro main 
 <nav id="nav" class="noprint"></nav>
 <script>
 const PKEY='cmi_pie_perfiles_v3', VKEY_LEGACY='cmi_pie_franco_vault_v2', RKEY='cmi_pie_recursos_genericos';
-let PID=null, S=null, CK=null, SALT=null, cur='inicio', timer=null, DRAFT='', FILT={txt:'',tipo:'',mes:''}, FD='', FH='', ORDEN='codigo', FICHA=null, VERCONF=false, PRES=false, IMPQ=null, FICHA_SES=null;
+let PID=null, S=null, CK=null, SALT=null, cur='inicio', timer=null, DRAFT='', FILT={txt:'',tipo:'',mes:'',pr:''}, FD='', FH='', ORDEN='codigo', FICHA=null, VERCONF=false, PRES=false, IMPQ=null, FICHA_SES=null;
 const MIN_INACTIVO=5*60*1000, PLAZO_DEFAULT_MESES=24;
 const TIPOS_NEE=['TEA','TDAH','Discapacidad Intelectual','Trastorno Específico del Lenguaje (TEL)','Discapacidad Auditiva','Discapacidad Visual','Disfasia','Funcionamiento Intelectual Limítrofe','Dificultades Específicas del Aprendizaje (DEA)','Trastorno de Déficit Atencional','Otra'];
 const TIPOS_ATENCION=['Intervención individual','Intervención grupal','Evaluación psicoeducativa','Entrevista familia','Coordinación docente','Observación de aula','Capacitación / Formación','Otra'];
@@ -86,6 +86,8 @@ const NIV_APO=['0 Ninguno','1 Puntual','2 Intermitente','3 Extenso','4 Permanent
 const ESTADOS_CASO=['Abierto','En seguimiento','Derivado','Cerrado'];
 const AREAS_META=['Lectura','Escritura','Matemática','Socioemocional','Autonomía','Comunicación','Conductual'];
 const RESP_META=['Psicólogo PIE','Educadora diferencial','Docente de aula','Familia','Fonoaudiólogo','Otro'];
+const ESTADOS_OBJ=['No iniciado','En proceso','Logrado','Modificado','Suspendido'];
+function revVencida(g){ return !!g.rev && diasDesde(g.rev)>30 && g.st!=='Logrado' && g.st!=='Suspendido'; }
 /* ===== utilidades ===== */
 function uid(){ return Date.now().toString(36)+Math.random().toString(36).slice(2,7); }
 function esc(s){ return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
@@ -266,6 +268,7 @@ function render(){
 }
 function go(v,push=true){
   if(cur==='atenciones'&&DRAFT&&v!==cur&&!confirm('Tienes una atención sin guardar. ¿Salir igual?')) return;
+  if(cur==='estudiantes'&&v!==cur&&(document.getElementById('e_cod')||{}).value&&!confirm('Tienes un estudiante sin guardar. ¿Salir igual?')) return;
   cur=v; if(push&&history.pushState) history.pushState({v},'');
   render(); window.scrollTo(0,0); resetTimer();
 }
@@ -291,6 +294,8 @@ function contarAlertas(){
   if(reev.length) a.push(reev.length+' evaluación(es) vencen en 30 días');
   const metasVenc=S.goals.filter(g=>g.plazo&&g.plazo<hoy()&&g.progreso<100).length;
   if(metasVenc) a.push(metasVenc+' meta(s) con plazo vencido');
+  const metasSinRev=S.goals.filter(revVencida).length;
+  if(metasSinRev) a.push(metasSinRev+' meta(s) sin revisión hace más de 30 días');
   const sinAt=activos.filter(s=>!ultimaAt(s.id)||diasDesde(ultimaAt(s.id))>30);
   if(sinAt.length) a.push(sinAt.length+' estudiante(s) sin atención hace más de 30 días');
   const chkInc=activos.filter(s=>!checkOk(s)).length;
@@ -338,7 +343,9 @@ function vInicio(){
   <div class="card" style="border-left:4px solid #c9a227"><h3>Alertas del día</h3>
     ${alertas.length?alertas.map(a=>`<p style="margin:5px 0;font-size:14px">• ${esc(a)}</p>`).join(''):'<p class="empty">Sin alertas pendientes ✔</p>'}
     <button class="mini" onclick="activarNotif()">Activar notificaciones</button></div>
+  <div class="card"><h3>Cumplimiento normativo global</h3>${(()=>{const a=activos.length, ok=activos.filter(checkOk).length, p=a?Math.round(ok/a*100):0; return `<p>Estudiantes con checklist completo: <b>${p}%</b> (${ok} de ${a})</p><div class="bar"><div style="width:${p}%"></div></div>`;})()}</div>
   ${hoyHTML()}
+  ${resumenSemanaHTML()}
   <div class="kpis">
     <div class="kpi"><b>${activos.length}</b><span>Estudiantes PIE activos</span></div>
     <div class="kpi"><b>${atMes.length}</b><span>Atenciones este mes</span></div>
@@ -346,10 +353,6 @@ function vInicio(){
     <div class="kpi"><b>${S.tasks.filter(t=>!t.done&&t.vence&&t.vence<hoy()).length}</b><span>Tareas vencidas</span></div>
     <div class="kpi"><b>${(()=>{const t=(S.plan||[]).reduce((a,p)=>a+(+p.min||0),0);const d=(S.plan||[]).filter(p=>p.tipo==='Atención directa').reduce((a,p)=>a+(+p.min||0),0);return t?Math.round(d/t*100):0;})()}%</b><span>Jornada en atención directa</span></div>
   </div>
-  <div class="card persp"><h3>Cumplimiento normativo global</h3>
-    <p>Estudiantes activos con checklist completo: <b>${activos.filter(checkOk).length}</b> de ${activos.length}</p>
-    <div class="bar"><div style="width:${activos.length?Math.round(activos.filter(checkOk).length/activos.length*100):0}%"></div></div>
-    <p class="meta">Evaluación, informe, consentimiento y reunión con apoderado.</p></div>
   <h2>Cuadro de Mando Integral</h2>
   <div class="card persp"><h3>1. Estudiantes (impacto)</h3>
     <p>Metas logradas: <b>${metasLogradas}</b> de ${S.goals.length}</p>
@@ -382,6 +385,27 @@ function hoyHTML(){
   return `<div class="card"><h3>Hoy</h3>
     <p>Reuniones: <b>${r.reun.length}</b> · Atenciones programadas: <b>${r.ats.length}</b> · Tareas para hoy: <b>${r.tar.length}</b></p>
     <p>Checklist normativo completo: <b>${r.chk}</b> de ${r.n} estudiantes activos</p></div>`;
+}
+function resumenSemanaHTML(){
+  const d=new Date(); const dow=(d.getDay()+6)%7;
+  const lun=new Date(d); lun.setDate(d.getDate()-dow);
+  const dom=new Date(lun); dom.setDate(lun.getDate()+6);
+  const iso=x=>x.toISOString().slice(0,10);
+  const ini=iso(lun), fin=iso(dom);
+  const en=f=>!!f&&f>=ini&&f<=fin;
+  const reun=S.meetings.filter(r=>en(r.fecha)&&r.estado==='Programada').length;
+  const atProg=S.sessions.filter(s=>en(s.fecha)&&s.es==='Programada').length;
+  const atReal=S.sessions.filter(s=>en(s.fecha)&&s.fecha<=hoy()).length;
+  const tar=S.tasks.filter(t=>!t.done&&en(t.vence)).length;
+  return `<div class="card"><h3>Resumen de la semana</h3>
+    <p>Del ${fmtF(ini)} al ${fmtF(fin)}:</p>
+    <p>Reuniones programadas: <b>${reun}</b> · Atenciones programadas: <b>${atProg}</b></p>
+    <p>Atenciones registradas hasta hoy: <b>${atReal}</b> · Tareas que vencen esta semana: <b>${tar}</b></p></div>`;
+}
+function filtrarEst(q){
+  const sel=document.getElementById('a_e'); if(!sel) return;
+  q=(q||'').trim().toLowerCase();
+  sel.innerHTML='<option value="">— Sin estudiante específico —</option>'+S.students.filter(s=>(s.codigo+' '+s.nee).toLowerCase().includes(q)).map(s=>`<option value="${s.id}">${esc(s.codigo)} - ${esc(s.nee)}</option>`).join('');
 }
 function recientesHTML(){
   const ids=[...new Set([...S.sessions].sort((a,b)=>b.fecha.localeCompare(a.fecha)).map(s=>s.estudiante).filter(Boolean))].slice(0,5);
@@ -462,6 +486,10 @@ function vEst(){
 function addEst(){
   const cod=document.getElementById('e_cod').value.trim();
   if(!cod){ alert('Ingresa un código o iniciales'); return; }
+  if(S.students.some(x=>x.codigo.toLowerCase()===cod.toLowerCase())){ alert('Ya existe un estudiante con ese código.'); return; }
+  const fe0=document.getElementById('e_fe').value, fr0=document.getElementById('e_fr').value;
+  if(fe0&&fe0>hoy()){ alert('La fecha de evaluación no puede ser futura.'); return; }
+  if(fe0&&fr0&&fr0<fe0){ alert('La fecha de reevaluación no puede ser anterior a la evaluación.'); return; }
   S.students.push({id:uid(),codigo:cod,curso:document.getElementById('e_curso').value.trim(),estado:document.getElementById('e_estado').value,nee:document.getElementById('e_nee').value,fechaEval:document.getElementById('e_fe').value,fechaReeval:document.getElementById('e_fr').value,obs:document.getElementById('e_obs').value.trim(),prof:document.getElementById('e_prof').value.trim(),inst:document.getElementById('e_inst').value.trim(),elig:document.getElementById('e_elig').value,der:document.getElementById('e_der').value.trim(),fder:document.getElementById('e_fder').value,conf:document.getElementById('e_conf').value.trim(),chk:{}});
   save(); render();
 }
@@ -496,12 +524,24 @@ function borrar(col,id){ if(!confirm('¿Eliminar este registro? Quedará en la p
 function restaurarPapelera(i){ const p=S.papelera[i]; if(!p) return; S[p.col].push(p.item); S.papelera.splice(i,1); save(); render(); }
 function vacearPapelera(){ if(!confirm('¿Vaciar la papelera de forma definitiva?')) return; S.papelera=[]; save(); render(); }
 /* ===== atenciones ===== */
+let ATORD='fecha';
+function ordenAt(a,b){
+  if(ATORD==='estudiante') return nombreEst(a.estudiante).localeCompare(nombreEst(b.estudiante))||b.fecha.localeCompare(a.fecha);
+  if(ATORD==='prioridad'){ const o={Alta:0,Media:1,Baja:2}; return (o[a.pr||'Media']??1)-(o[b.pr||'Media']??1)||b.fecha.localeCompare(a.fecha); }
+  return b.fecha.localeCompare(a.fecha);
+}
+function chipsAt(){
+  const ords=[['fecha','Fecha'],['estudiante','Estudiante'],['prioridad','Prioridad']];
+  const o=ords.map(([k,t])=>'<button class="mini" type="button" style="'+(ATORD===k?'background:#1e3a5f;color:#fff':'')+'" onclick="ATORD=\''+k+'\';render()">'+t+'</button>').join('');
+  const p=['Alta','Media','Baja'].map(x=>'<button class="mini" type="button" style="'+(FILT.pr===x?'background:#1e3a5f;color:#fff':'')+'" onclick="FILT.pr=FILT.pr===\''+x+'\'?\'\':\''+x+'\';render()">'+x+'</button>').join('');
+  return '<p class="meta">Ordenar por</p><div>'+o+'</div><p class="meta">Filtrar por prioridad</p><div>'+p+'</div>';
+}
 function vAt(){
   const meses=[...new Set(S.sessions.map(s=>s.fecha.slice(0,7)))].sort().reverse();
   const lista=[...S.sessions].filter(s=>{
     const txt=(nombreEst(s.estudiante)+' '+s.tipo+' '+s.desc).toLowerCase();
-    return (!FILT.txt||txt.includes(FILT.txt))&&(!FILT.tipo||s.tipo===FILT.tipo)&&(!FILT.mes||s.fecha.startsWith(FILT.mes));
-  }).sort((a,b)=>b.fecha.localeCompare(a.fecha)).map(s=>`
+    return (!FILT.txt||txt.includes(FILT.txt))&&(!FILT.tipo||s.tipo===FILT.tipo)&&(!FILT.mes||s.fecha.startsWith(FILT.mes))&&(!FILT.pr||(s.pr||'Media')===FILT.pr);
+  }).sort(ordenAt).map(s=>`
     <div class="item"><b>${fmtF(s.fecha)}</b> · <span class="tag">${esc(s.tipo)}</span><span class="tag">${esc(s.duracion)} min</span><span class="tag ${s.pr==='Alta'?'red':s.pr==='Baja'?'ok':'warn'}">${esc(s.pr||'Media')}</span><span class="tag">${esc(s.es||'Realizada')}</span><span class="tag">${esc(s.cn||'Presencial')}</span><br>
       <span class="meta">Estudiante: ${esc(nombreEst(s.estudiante))}</span><br>
       <span class="sens">${esc(s.desc)}</span>
@@ -512,6 +552,7 @@ function vAt(){
     <input placeholder="Buscar por estudiante, tipo o texto" value="${esc(FILT.txt)}" onchange="FILT.txt=this.value.toLowerCase();render()">
     <div class="row"><select onchange="FILT.tipo=this.value;render()"><option value="">Todos los tipos</option>${opts(TIPOS_ATENCION,FILT.tipo).replace(/<option (?!selected)/g,'<option ')}</select>
     <select onchange="FILT.mes=this.value;render()"><option value="">Todos los meses</option>${meses.map(m=>`<option value="${m}" ${FILT.mes===m?'selected':''}>${m}</option>`).join('')}</select></div>
+    ${chipsAt()}
   </div>
   <div class="card">
     <h3>Nueva atención</h3>
@@ -521,15 +562,18 @@ function vAt(){
     <div class="row"><select id="a_pr">${opts(['Alta','Media','Baja'],'Media')}</select><select id="a_es">${opts(['Realizada','Programada','Cancelada','Reprogramada','No asistió'],'Realizada')}</select><select id="a_cn">${opts(['Presencial','Remoto','Telefónico','Correo','Mensajería'],'Presencial')}</select></div>
     <select id="a_t">${opts(TIPOS_ATENCION,'')}</select>
     ${recientesHTML()}
+    <input placeholder="Escribe el código para buscar estudiante" oninput="filtrarEst(this.value)">
     <select id="a_e"><option value="">— Sin estudiante específico —</option>${S.students.map(s=>`<option value="${s.id}">${esc(s.codigo)} - ${esc(s.nee)}</option>`).join('')}</select>
     <textarea id="a_desc" rows="3" placeholder="Descripción: objetivo, intervención, avances, acuerdos (mín. 10 caracteres)" oninput="DRAFT=this.value;sensAviso(this.value)">${esc(DRAFT)}</textarea>
-    <p class="meta" id="sensWarn"></p>
+    <p class="meta" id="descCnt"></p><p class="meta" id="sensWarn"></p>
     <p class="meta">El borrador se conserva mientras la app esté abierta y se borra al guardar.</p>
     <button class="btn" onclick="addAt()">Guardar atención</button>
   </div>
   <div class="card">${lista}</div>`;
 }
 function sensAviso(t){
+  const cnt=document.getElementById('descCnt');
+  if(cnt){ const n=(t||'').trim().length; cnt.innerHTML=n<10?'<span class="late">'+n+'/10 caracteres mínimos</span>':'<span class="meta">'+n+' caracteres ✔</span>'; }
   const el=document.getElementById('sensWarn'); if(!el) return;
   el.innerHTML=/consumo|droga|alcohol|autolesi|suicid|ideaci|abuso|violencia|golpe/i.test(t||'')?'<span class="late">Atención: el texto parece contener datos sensibles. Regístralos solo si es necesario y en observaciones confidenciales.</span>':'';
 }
@@ -559,7 +603,7 @@ function vPlanes(){
       <span class="meta">${esc(nombreEst(g.estudiante))} · ${esc(g.area||'—')} · Resp.: ${esc(g.resp||'—')} · Plazo: ${esc(g.plazo||'—')}</span><br>
       <span class="meta">Línea base: ${esc(g.linea||'—')} → meta: ${esc(g.final||'—')} · Sesiones vinculadas: ${(((S.students.find(s=>s.id===g.estudiante)||{}).ses)||[]).filter(x=>x.gid===g.id).length}</span>
       <div class="bar"><div style="width:${g.progreso}%"></div></div>
-      <span class="meta">${g.progreso}% ${g.plazo&&g.plazo<hoy()&&g.progreso<100?'<span class="late">· Vencida</span>':''}</span>
+      <span class="meta">${g.progreso}% <span class="tag">${esc(g.st||'No iniciado')}</span>${g.plazo&&g.plazo<hoy()&&g.progreso<100?'<span class="late">· Vencida</span>':''}${revVencida(g)?'<span class="late">· Sin revisión hace más de 30 días</span>':''}</span>
       <div style="margin-top:4px">
         <button class="mini" onclick="avanzar('${g.id}')">+10%</button>
         <button class="mini" onclick="setProg('${g.id}')">Editar %</button>
@@ -572,19 +616,21 @@ function vPlanes(){
     <textarea id="g_m" rows="2" placeholder="Objetivo medible (ej: Leer textos de 1 página con 80% de comprensión)"></textarea>
     <div class="row"><input id="g_l" placeholder="Línea base"><input id="g_f" placeholder="Meta final"></div>
     <div class="row"><select id="g_a">${opts(AREAS_META,'')}</select><select id="g_r">${opts(RESP_META,'')}</select></div>
+    <select id="g_st">${opts(ESTADOS_OBJ,'No iniciado')}</select>
     <input type="date" id="g_p">
     <button class="btn" onclick="addGoal()">Guardar meta</button></div>
   <div class="card">${lista}</div>`;
 }
 function addGoal(){
   const m=document.getElementById('g_m').value.trim(); if(!m){ alert('Escribe la meta'); return; }
-  S.goals.push({id:uid(),estudiante:document.getElementById('g_e').value,meta:m,linea:document.getElementById('g_l').value.trim(),final:document.getElementById('g_f').value.trim(),area:document.getElementById('g_a').value,resp:document.getElementById('g_r').value,plazo:document.getElementById('g_p').value,progreso:0,hist:[]});
+  const gp=document.getElementById('g_p').value; if(gp&&gp<hoy()&&!confirm('El plazo ya pasó. ¿Guardar la meta igualmente?')) return;
+  S.goals.push({id:uid(),estudiante:document.getElementById('g_e').value,meta:m,linea:document.getElementById('g_l').value.trim(),final:document.getElementById('g_f').value.trim(),area:document.getElementById('g_a').value,resp:document.getElementById('g_r').value,plazo:document.getElementById('g_p').value,progreso:0,hist:[],st:document.getElementById('g_st').value,rev:hoy()});
   save(); render();
 }
-function avanzar(id){ const g=S.goals.find(x=>x.id===id); g.progreso=Math.min(100,g.progreso+10); g.hist=g.hist||[]; g.hist.push({f:hoy(),p:g.progreso}); save(); render(); }
+function avanzar(id){ const g=S.goals.find(x=>x.id===id); g.progreso=Math.min(100,g.progreso+10); g.rev=hoy(); g.hist=g.hist||[]; g.hist.push({f:hoy(),p:g.progreso}); save(); render(); }
 function setProg(id){
   const g=S.goals.find(x=>x.id===id); const v=prompt('Porcentaje de avance (0-100):',g.progreso); if(v===null) return;
-  g.progreso=Math.max(0,Math.min(100,+v||0)); g.hist=g.hist||[]; g.hist.push({f:hoy(),p:g.progreso}); save(); render();
+  g.progreso=Math.max(0,Math.min(100,+v||0)); g.rev=hoy(); g.hist=g.hist||[]; g.hist.push({f:hoy(),p:g.progreso}); save(); render();
 }
 /* ===== familias ===== */
 function vFam(){
@@ -603,6 +649,7 @@ function vFam(){
   <div class="card">${lista}</div>`;
 }
 function addReun(){
+  const fr0=document.getElementById('r_f').value||hoy(); if(document.getElementById('r_s').value==='Realizada'&&fr0>hoy()){ alert('Una reunión realizada no puede tener fecha futura.'); return; }
   S.meetings.push({id:uid(),fecha:document.getElementById('r_f').value||hoy(),estado:document.getElementById('r_s').value,estudiante:document.getElementById('r_e').value,participantes:document.getElementById('r_p').value,tema:document.getElementById('r_t').value});
   save(); render();
 }
@@ -625,6 +672,7 @@ function vTar(){
 }
 function addTarea(){
   const d=document.getElementById('t_d').value.trim(); if(!d){ alert('Escribe la descripción'); return; }
+  const vv=document.getElementById('t_v').value; if(vv&&vv<hoy()&&!confirm('La fecha de vencimiento ya pasó. ¿Guardar igualmente?')) return;
   S.tasks.push({id:uid(),desc:d,tipo:document.getElementById('t_t').value,vence:document.getElementById('t_v').value,done:false}); save(); render();
 }
 function toggleTarea(id){ const t=S.tasks.find(x=>x.id===id); t.done=!t.done; save(); render(); }
@@ -866,9 +914,17 @@ function guardarEvalDet(sid){
 function vInformales(s){
   const l=(s.informales||[]).map(x=>`<div class="item"><span class="tag">${esc(x.f)}</span> ${esc(x.t)}</div>`).join('')||'<p class="empty">Sin evaluaciones informales.</p>';
   return `<div class="card"><h3>Evaluaciones informales</h3><p class="meta">Solo en ficha; no entran al informe psicoeducativo.</p>${l}
-  <textarea id="inf_t" rows="2" placeholder="Observación de aula, entrevista, lista de chequeo..."></textarea>
+  <select onchange="guiaInf(this.value)"><option value="">— Usar guía precargada —</option><option value="aula">Observación de aula (escala de frecuencia)</option><option value="abc">Registro ABC</option><option value="doc">Entrevista a docente</option><option value="apo">Entrevista a apoderado</option></select>
+  <textarea id="inf_t" rows="3" placeholder="Observación de aula, entrevista, lista de chequeo..."></textarea>
   <button class="btn sec" onclick="addInformal('${s.id}')">Agregar</button></div>`;
 }
+const GUIAS={
+  aula:'Escala de frecuencia (siempre / a veces / nunca):\n- Atiende a la instrucción del docente:\n- Participa en la actividad:\n- Solicita ayuda cuando la necesita:\n- Mantiene la tarea hasta terminar:\nObservaciones:',
+  abc:'Antecedente (qué ocurrió antes):\nConducta observada:\nConsecuencia (qué ocurrió después):\nFrecuencia y duración:\nHipótesis de función:',
+  doc:'1. ¿Qué situaciones le resultan más difíciles al estudiante?\n2. ¿Qué apoyos han funcionado?\n3. ¿Cómo se relaciona con sus pares?\n4. ¿Qué le gustaría que el equipo considere?',
+  apo:'1. ¿Cómo describe usted el funcionamiento del estudiante en casa?\n2. ¿Qué le preocupa o le interesa?\n3. ¿Qué estrategias han funcionado?\n4. ¿Qué acuerdos le parecen posibles?'
+};
+function guiaInf(k){ const t=document.getElementById('inf_t'); if(t&&GUIAS[k]) t.value=GUIAS[k]; }
 function addInformal(sid){
   const t=document.getElementById('inf_t').value.trim(); if(!t) return;
   const s=S.students.find(x=>x.id===sid); s.informales=s.informales||[]; s.informales.push({f:hoy(),t}); save(); render();
@@ -998,11 +1054,15 @@ function vCasos(){
 }
 function addCaso(){
   const m=document.getElementById('c_m').value.trim(); if(!m){ alert('Escribe el motivo'); return; }
+  const ci=document.getElementById('c_i').value||hoy(), cr=document.getElementById('c_r').value;
+  if(ci>hoy()){ alert('La fecha de inicio no puede ser futura.'); return; }
+  if(cr&&cr<ci){ alert('La próxima revisión no puede ser anterior al inicio del caso.'); return; }
+  if(cr&&cr<hoy()&&!confirm('La fecha de próxima revisión ya pasó. ¿Guardar igualmente?')) return;
   S.cases=S.cases||[];
   S.cases.push({id:uid(),estudiante:document.getElementById('c_e').value,motivo:m,inicio:document.getElementById('c_i').value||hoy(),revision:document.getElementById('c_r').value,responsable:document.getElementById('c_resp').value.trim(),riesgo:!!document.getElementById('c_rg').value,estado:'Abierto',linea:[{f:hoy(),t:'Caso abierto'}]});
   save(); render();
 }
-function avanzarCaso(id){ const c=S.cases.find(x=>x.id===id); c.estado=ESTADOS_CASO[(ESTADOS_CASO.indexOf(c.estado)+1)%ESTADOS_CASO.length]; c.linea=c.linea||[]; c.linea.push({f:hoy(),t:'Estado: '+c.estado}); save(); render(); }
+function avanzarCaso(id){ const c=S.cases.find(x=>x.id===id); const nx=ESTADOS_CASO[(ESTADOS_CASO.indexOf(c.estado)+1)%ESTADOS_CASO.length]; if(nx==='Cerrado'&&!confirm('¿Cerrar este caso? Podrás seguir viéndolo en la lista.')) return; c.estado=nx; c.linea=c.linea||[]; c.linea.push({f:hoy(),t:'Estado: '+c.estado}); save(); render(); }
 function notaCaso(id){ const c=S.cases.find(x=>x.id===id); const t=prompt("Nota del caso. Para una derivación escribe 'Derivación: a quién, motivo'."); if(!t) return; c.linea=c.linea||[]; c.linea.push({f:hoy(),t:t.trim()}); save(); render(); }
 /* ===== planificador semanal ===== */
 function vPlanif(){
@@ -1016,7 +1076,7 @@ function vPlanif(){
   <div class="card"><h3>Jornada</h3><p>Atención directa: <b>${pct}%</b> del tiempo planificado (${tot} min)</p><div class="bar"><div style="width:${pct}%"></div></div></div>
   <div class="card"><h3>Nuevo bloque</h3>
     <div class="row"><select id="pl_d">${opts(dias,'')}</select><input type="time" id="pl_h"></div>
-    <div class="row"><select id="pl_t">${opts(['Atención directa','Atención indirecta','Coordinación','Administrativa','Formación','Reunión institucional'],'')}</select><input type="number" id="pl_m" value="45" placeholder="Minutos"></div>
+    <div class="row"><select id="pl_t">${opts(['Atención directa','Atención indirecta','Coordinación','Administrativa','Formación','Reunión institucional','Consejo de profesores'],'')}</select><input type="number" id="pl_m" value="45" placeholder="Minutos"></div>
     <input id="pl_n" placeholder="Nota (opcional)">
     <button class="btn" onclick="addPlan()">Agregar bloque</button></div>
   <div class="card">${lista}</div>`;
@@ -1026,7 +1086,7 @@ function addPlan(){
   const dia0=document.getElementById('pl_d').value, tipo0=document.getElementById('pl_t').value;
   const choque=(S.plan||[]).find(p=>p.dia===dia0&&p.hora===h);
   if(choque&&!confirm('Ya hay un bloque ('+choque.tipo+') a esa hora el '+dia0+'. ¿Agregar de todas formas?')) return;
-  if(tipo0==='Atención directa'&&(S.plan||[]).some(p=>p.dia===dia0&&p.tipo==='Reunión institucional'&&p.hora===h)){ alert('Hay una reunión institucional a esa hora: no se puede bloquear atención directa encima.'); return; }
+  if(tipo0==='Atención directa'&&(S.plan||[]).some(p=>p.dia===dia0&&(p.tipo==='Reunión institucional'||p.tipo==='Consejo de profesores')&&p.hora===h)){ alert('Hay una reunión o consejo a esa hora: no se puede bloquear atención directa encima.'); return; }
   S.plan=S.plan||[];
   S.plan.push({id:uid(),dia:document.getElementById('pl_d').value,hora:h,tipo:document.getElementById('pl_t').value,min:+document.getElementById('pl_m').value||0,nota:document.getElementById('pl_n').value.trim()});
   save(); render();
