@@ -678,7 +678,7 @@ function cambiarReun(id){ const r=S.meetings.find(x=>x.id===id); const o=['Progr
 function vTar(){
   const lista=[...S.tasks].sort((a,b)=>(a.done-b.done)||(a.vence||'9999').localeCompare(b.vence||'9999')).map(t=>{
     const venc=!t.done&&t.vence&&t.vence<hoy();
-    return `<div class="item" data-sw="${t.id}"><label><input type="checkbox" ${t.done?'checked':''} onchange="toggleTarea('${t.id}')">
+    return `<div class="item" data-sw="${t.id}" data-del="tasks:${t.id}"><label><input type="checkbox" ${t.done?'checked':''} onchange="toggleTarea('${t.id}')">
       <b style="${t.done?'text-decoration:line-through;color:#94a3b8':''}">${esc(t.desc)}</b></label><br>
       <span class="tag">${esc(t.tipo)}</span><span class="meta ${venc?'late':''}">Vence: ${esc(t.vence||'—')}${venc?' (vencida)':''}</span>
       <div style="margin-top:4px"><button class="del" onclick="borrar('tasks','${t.id}')">Eliminar</button></div></div>`;}).join('')||'<p class="empty">Sin tareas.</p>';
@@ -706,6 +706,9 @@ function vRes(){
   <div class="card">
     <p class="meta">Tus datos están cifrados en este equipo. Los respaldos también se cifran con una contraseña que tú eliges.</p>
     <button class="btn" onclick="exportar()">Exportar respaldo cifrado (.json)</button></div>
+  <div class="card"><h3>Copia previa a la última importación</h3>
+    <p class="meta">Se guarda automáticamente antes de importar un respaldo o un CSV. Restaurarla intercambia los datos: lo actual pasa a ser la copia previa, así también puedes deshacer la restauración.</p>
+    <button class="btn sec" onclick="restaurarPrev()">Restaurar copia previa</button></div>
   <div class="card"><h3>Importar respaldo</h3>
     <input type="file" accept="application/json" onchange="importar(this)">
     <p class="meta">Pedirá la contraseña del respaldo y reemplazará los datos actuales.</p></div>
@@ -729,7 +732,11 @@ function vRes(){
     <h3>Vigencia de evaluación (meses)</h3>
     <input type="number" value="${c.plazoMeses}" onchange="cfg().plazoMeses=+this.value||24;save();render()">
     <p class="meta">Valor provisorio de 24 meses: verificar con el Decreto 170/2009 antes de usar con casos reales.</p></div>
-  <div class="card"><h3>Papelera</h3>${(S.papelera||[]).map((p,i)=>`<div class="item"><span class="meta">${esc(p.f)} · ${esc(p.col)}</span> <button class="mini" onclick="restaurarPapelera(${i})">Restaurar</button></div>`).join('')||'<p class="empty">Papelera vacía.</p>'}${(S.papelera||[]).length?'<button class="btn sec" onclick="restaurarPapelera(0)">Deshacer última eliminación</button><button class="mini" onclick="vacearPapelera()">Vaciar papelera</button>':''}</div>
+  <div class="card"><h3>Papelera (${(S.papelera||[]).length})</h3><p class="meta">Los elementos se conservan 30 días y luego se borran solos.</p>${(S.papelera||[]).map((p,i)=>`<div class="item"><span class="tag">${esc(NOM_COL[p.col]||p.col)}</span> <span class="meta sens">${esc(etiq(p.item))}</span><br><span class="meta">Eliminado ${fmtF(p.f)} · quedan ${Math.max(0,30-diasDesde(p.f))} días</span> <button class="mini" onclick="restaurarPapelera(${i})">Restaurar</button></div>`).join('')||'<p class="empty">Papelera vacía.</p>'}${(S.papelera||[]).length?'<button class="btn sec" onclick="restaurarPapelera(0)">Deshacer última eliminación</button><button class="mini" onclick="vacearPapelera()">Vaciar papelera</button>':''}</div>
+  <div class="card"><h3>Aviso de uso y consentimiento</h3>
+    <p class="meta">Textos base para revisar con tu establecimiento antes de usarlos.</p>
+    <button class="btn sec" onclick="descTxt('aviso_uso_cmi_pie.txt',AVISO_TXT)">Descargar aviso de uso (.txt)</button>
+    <button class="btn sec" onclick="descTxt('consentimiento_modelo.txt',CONS_TXT)">Descargar modelo de consentimiento (.txt)</button></div>
   <div class="card"><h3>Recursos</h3><button class="btn sec" onclick="go('recursos')">Recursos descargables</button></div>
   <div class="card"><h3>Política de retención</h3>
     <p class="meta">Plazo de conservación de datos de estudiantes egresados o retirados (en meses).</p>
@@ -738,13 +745,21 @@ function vRes(){
     <button class="btn sec" onclick="purgarRetencion()">Aplicar política de retención ahora</button></div>
   <div class="card"><button class="btn sec" onclick="borrarTodo()">Borrar todos los datos de este perfil</button></div>`;
 }
+const AVISO_TXT='AVISO DE USO DE LA APLICACIÓN CMI PIE\n\n1. Finalidad: apoyo a la gestión del psicólogo PIE (registro de atenciones, planes de apoyo, seguimiento de casos y plazos normativos).\n2. Datos: se registran preferentemente códigos o iniciales de estudiantes, no nombres completos. Los datos sensibles deben limitarse a lo estrictamente necesario.\n3. Almacenamiento: los datos se guardan cifrados (AES-256) en el equipo del profesional. La aplicación no envía datos a servidores.\n4. Responsable: el profesional que usa la aplicación es responsable del tratamiento de los datos que registra, conforme a la normativa del establecimiento.\n5. Derechos: el titular o su representante puede solicitar acceso, rectificación o supresión de sus datos a través del establecimiento.\n6. Retención: los datos de estudiantes egresados o retirados se eliminan según la política de retención configurada.\n7. Respaldos: los respaldos cifrados deben guardarse en un lugar seguro y su contraseña por separado.\n\nRevisar este texto con la dirección del establecimiento y la normativa vigente (Ley 21.719 de protección de datos personales) antes de usarlo.';
+const CONS_TXT='MODELO DE CONSENTIMIENTO INFORMADO (revisar con el establecimiento)\n\nYo, ____________________ (adulto responsable), declaro haber sido informado(a) de que el psicólogo PIE del establecimiento realizará una evaluación psicoeducativa y un plan de apoyo para el estudiante, y que registrará información de seguimiento con fines pedagógicos.\n\nEntiendo que: la información se usará solo para el apoyo del estudiante, se resguardará con confidencialidad y puedo solicitar acceso o corrección de los datos en cualquier momento.\n\nAutorizo / No autorizo (marcar una opción).\n\nFecha: ____________\nNombre y firma del adulto responsable: ____________________\nNombre y firma del profesional: ____________________';
+function descTxt(nombre,texto){ const a=document.createElement('a'); a.href=URL.createObjectURL(new Blob([texto],{type:'text/plain;charset=utf-8'})); a.download=nombre; a.click(); }
+const NOM_COL={students:'Estudiante',sessions:'Atención',goals:'Meta',meetings:'Reunión',tasks:'Tarea',cases:'Caso',plan:'Bloque'};
+function etiq(x){ return String(x.codigo||x.meta||x.motivo||x.desc||x.tema||x.hora||'').slice(0,60); }
+async function sha256Hex(str){ const d=await crypto.subtle.digest('SHA-256',enc.encode(str)); return [...new Uint8Array(d)].map(b=>b.toString(16).padStart(2,'0')).join(''); }
 async function exportar(){
   const pw=prompt('Crea una contraseña para este respaldo (mínimo 6 caracteres). Guárdala aparte.');
   if(pw===null) return;
   if(pw.length<6){ alert('La contraseña debe tener al menos 6 caracteres.'); return; }
   const salt=crypto.getRandomValues(new Uint8Array(16));
   const c=await cifrar(await deriveKey(pw,salt),JSON.stringify(S));
-  const out=JSON.stringify({formato:'cmi-pie-respaldo',v:2,salt:b64(salt),iv:c.iv,ct:c.ct});
+  const sha=await sha256Hex(c.ct);
+  const meta={est:S.students.length,at:S.sessions.length,met:S.goals.length,fecha:hoy()};
+  const out=JSON.stringify({formato:'cmi-pie-respaldo',v:3,salt:b64(salt),iv:c.iv,ct:c.ct,sha,meta});
   const a=document.createElement('a'); a.href=URL.createObjectURL(new Blob([out],{type:'application/json'}));
   a.download='respaldo_cifrado_cmi_pie_'+hoy()+'.json'; a.click();
   cfg().ultimoRespaldo=hoy(); save();
@@ -757,7 +772,9 @@ function importar(input){
       const obj=JSON.parse(r.result); let nuevo;
       if(obj.formato==='cmi-pie-respaldo'){
         const pw=prompt('Contraseña del respaldo:'); if(pw===null){ input.value=''; return; }
+        if(obj.sha){ const h=await sha256Hex(obj.ct); if(h!==obj.sha) throw new Error('integridad'); }
         nuevo=JSON.parse(await descifrar(await deriveKey(pw,unb64(obj.salt)),obj.iv,obj.ct));
+        if(obj.meta&&(obj.meta.est!==(nuevo.students||[]).length||obj.meta.at!==(nuevo.sessions||[]).length)) throw new Error('integridad');
       } else if(obj.students){
         if(!confirm('Este respaldo no está cifrado. ¿Continuar?')){ input.value=''; return; }
         nuevo=obj;
@@ -767,7 +784,7 @@ function importar(input){
       localStorage.setItem(vk()+'_prev',localStorage.getItem(vk()));
       S={students:[],sessions:[],goals:[],meetings:[],tasks:[],cases:[],plan:[],formacion:0,...nuevo};
       save(); render(); alert('Respaldo importado. Se guardó una copia previa en este equipo.');
-    }catch(e){ alert('No se pudo importar: archivo no válido o contraseña incorrecta.'); }
+    }catch(e){ alert(e.message==='integridad'?'El respaldo está alterado o incompleto (falló la verificación de integridad). No se importó nada.':'No se pudo importar: archivo no válido o contraseña incorrecta.'); }
     input.value='';
   };
   r.readAsText(f);
@@ -776,6 +793,19 @@ function borrarTodo(){
   if(!confirm('¿Borrar este perfil y todos sus datos? Esta acción no se puede deshacer.')) return;
   localStorage.removeItem(vk()); localStorage.removeItem(vk()+'_prev');
   setPerfiles(getPerfiles().filter(p=>p.id!==PID)); PID=null; clearTimeout(timer); showPerfiles();
+}
+async function restaurarPrev(){
+  const p=localStorage.getItem(vk()+'_prev');
+  if(!p){ alert('No hay copia previa en este equipo.'); return; }
+  if(!confirm('Esto reemplaza los datos actuales por la copia previa. Los datos actuales quedarán como nueva copia previa. ¿Continuar?')) return;
+  try{
+    const v=JSON.parse(p);
+    const nuevo=JSON.parse(await descifrar(CK,v.iv,v.ct));
+    const actual=localStorage.getItem(vk());
+    S={students:[],sessions:[],goals:[],meetings:[],tasks:[],cases:[],plan:[],formacion:0,...nuevo};
+    save(); localStorage.setItem(vk()+'_prev',actual);
+    render(); alert('Copia previa restaurada.');
+  }catch(e){ alert('La copia previa no se puede abrir con el PIN actual (es posible que el PIN haya cambiado después de crearla).'); }
 }
 /* ===== recursos descargables (RD) ===== */
 const RD_BASE=[
