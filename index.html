@@ -265,6 +265,7 @@ function render(){
   if(!S) return;
   renderNav(true);
   document.getElementById('app').innerHTML=(FN[cur]||vInicio)();
+  bindSwipe();
 }
 function go(v,push=true){
   if(cur==='atenciones'&&DRAFT&&v!==cur&&!confirm('Tienes una atención sin guardar. ¿Salir igual?')) return;
@@ -302,6 +303,9 @@ function contarAlertas(){
   if(chkInc) a.push(chkInc+' estudiante(s) con checklist normativo incompleto');
   const casos=(S.cases||[]).filter(c=>c.riesgo&&c.estado!=='Cerrado').length;
   if(casos) a.push(casos+' caso(s) de riesgo abiertos');
+  const lim=addMeses(hoy(),-(cfg().retMeses||60));
+  const ret=activos.length<S.students.length?S.students.filter(s=>s.estado!=='Activo'&&s.fEst&&s.fEst<=lim).length:0;
+  if(ret) a.push(ret+' egresado(s)/retirado(s) superan el plazo de retención');
   const rp=cfg().ultimoRespaldo; if(!rp||diasDesde(rp)>14) a.push('Recuerda hacer un respaldo cifrado (hace más de 14 días)');
   return a;
 }
@@ -519,7 +523,23 @@ function confirmarImport(){
   IMPQ.forEach(x=>S.students.push({...x,id:uid(),chk:{}}));
   IMPQ=null; save(); render(); alert('Importación completa.');
 }
-function cambiarEstado(id){ const s=S.students.find(x=>x.id===id); const o=['Activo','Egresado','Retirado']; s.estado=o[(o.indexOf(s.estado)+1)%o.length]; save(); render(); }
+function cambiarEstado(id){ const s=S.students.find(x=>x.id===id); const o=['Activo','Egresado','Retirado']; s.estado=o[(o.indexOf(s.estado)+1)%o.length]; s.fEst=s.estado==='Activo'?'':hoy(); save(); render(); }
+function purgarRetencion(){
+  const m=cfg().retMeses||60;
+  const lim=addMeses(hoy(),-m);
+  S.students.forEach(s=>{ if(s.estado!=='Activo'&&!s.fEst) s.fEst=hoy(); });
+  const vencidos=S.students.filter(s=>s.estado!=='Activo'&&s.fEst&&s.fEst<=lim);
+  if(!vencidos.length){ save(); alert('No hay estudiantes egresados o retirados que superen el plazo de '+m+' meses.'); render(); return; }
+  if(!confirm('Se borrarán definitivamente '+vencidos.length+' estudiante(s) egresado(s) o retirado(s) con más de '+m+' meses, junto con sus atenciones, metas, sesiones, reuniones y casos. Esta acción no se puede deshacer. Se recomienda exportar un respaldo antes. ¿Continuar?')) return;
+  const ids=new Set(vencidos.map(s=>s.id));
+  S.students=S.students.filter(s=>!ids.has(s.id));
+  S.sessions=S.sessions.filter(x=>!ids.has(x.estudiante));
+  S.goals=S.goals.filter(x=>!ids.has(x.estudiante));
+  S.meetings=S.meetings.filter(x=>!ids.has(x.estudiante));
+  S.cases=(S.cases||[]).filter(x=>!ids.has(x.estudiante));
+  S.log=S.log||[]; S.log.unshift({f:new Date().toLocaleString('es-CL'),a:'Borrado por retención: '+vencidos.length+' estudiante(s)'});
+  save(); render(); alert('Borrado completado: '+vencidos.length+' estudiante(s) eliminados según la política de retención.');
+}
 function borrar(col,id){ if(!confirm('¿Eliminar este registro? Quedará en la papelera.')) return; S.papelera=S.papelera||[]; const it=S[col].find(x=>x.id===id); if(it) S.papelera.unshift({col,item:it,f:hoy()}); S[col]=S[col].filter(x=>x.id!==id); save(); render(); }
 function restaurarPapelera(i){ const p=S.papelera[i]; if(!p) return; S[p.col].push(p.item); S.papelera.splice(i,1); save(); render(); }
 function vacearPapelera(){ if(!confirm('¿Vaciar la papelera de forma definitiva?')) return; S.papelera=[]; save(); render(); }
@@ -542,7 +562,7 @@ function vAt(){
     const txt=(nombreEst(s.estudiante)+' '+s.tipo+' '+s.desc).toLowerCase();
     return (!FILT.txt||txt.includes(FILT.txt))&&(!FILT.tipo||s.tipo===FILT.tipo)&&(!FILT.mes||s.fecha.startsWith(FILT.mes))&&(!FILT.pr||(s.pr||'Media')===FILT.pr);
   }).sort(ordenAt).map(s=>`
-    <div class="item"><b>${fmtF(s.fecha)}</b> · <span class="tag">${esc(s.tipo)}</span><span class="tag">${esc(s.duracion)} min</span><span class="tag ${s.pr==='Alta'?'red':s.pr==='Baja'?'ok':'warn'}">${esc(s.pr||'Media')}</span><span class="tag">${esc(s.es||'Realizada')}</span><span class="tag">${esc(s.cn||'Presencial')}</span><br>
+    <div class="item" data-del="sessions:${s.id}"><b>${fmtF(s.fecha)}</b> · <span class="tag">${esc(s.tipo)}</span><span class="tag">${esc(s.duracion)} min</span><span class="tag ${s.pr==='Alta'?'red':s.pr==='Baja'?'ok':'warn'}">${esc(s.pr||'Media')}</span><span class="tag">${esc(s.es||'Realizada')}</span><span class="tag">${esc(s.cn||'Presencial')}</span><br>
       <span class="meta">Estudiante: ${esc(nombreEst(s.estudiante))}</span><br>
       <span class="sens">${esc(s.desc)}</span>
       <div style="margin-top:4px"><button class="mini" onclick="editarAt('${s.id}')">Editar</button><button class="del" onclick="borrar('sessions','${s.id}')">Eliminar</button></div></div>`).join('')||'<p class="empty">Sin atenciones con esos filtros.</p>';
@@ -658,7 +678,7 @@ function cambiarReun(id){ const r=S.meetings.find(x=>x.id===id); const o=['Progr
 function vTar(){
   const lista=[...S.tasks].sort((a,b)=>(a.done-b.done)||(a.vence||'9999').localeCompare(b.vence||'9999')).map(t=>{
     const venc=!t.done&&t.vence&&t.vence<hoy();
-    return `<div class="item"><label><input type="checkbox" ${t.done?'checked':''} onchange="toggleTarea('${t.id}')">
+    return `<div class="item" data-sw="${t.id}"><label><input type="checkbox" ${t.done?'checked':''} onchange="toggleTarea('${t.id}')">
       <b style="${t.done?'text-decoration:line-through;color:#94a3b8':''}">${esc(t.desc)}</b></label><br>
       <span class="tag">${esc(t.tipo)}</span><span class="meta ${venc?'late':''}">Vence: ${esc(t.vence||'—')}${venc?' (vencida)':''}</span>
       <div style="margin-top:4px"><button class="del" onclick="borrar('tasks','${t.id}')">Eliminar</button></div></div>`;}).join('')||'<p class="empty">Sin tareas.</p>';
@@ -679,6 +699,7 @@ function toggleTarea(id){ const t=S.tasks.find(x=>x.id===id); t.done=!t.done; sa
 /* ===== ajustes ===== */
 function vRes(){
   const c=cfg();
+  S.papelera=(S.papelera||[]).filter(p=>diasDesde(p.f)<=30);
   return `
   <h2>Ajustes y respaldo</h2>
   <div class="card avatar-wrap">${avatarHTML(perfilActual()||{nombre:'?'},56)}<div><b>${esc((perfilActual()||{}).nombre||'')}</b><br><span class="meta">${esc((perfilActual()||{}).cargo||'')}</span></div></div>
@@ -710,6 +731,11 @@ function vRes(){
     <p class="meta">Valor provisorio de 24 meses: verificar con el Decreto 170/2009 antes de usar con casos reales.</p></div>
   <div class="card"><h3>Papelera</h3>${(S.papelera||[]).map((p,i)=>`<div class="item"><span class="meta">${esc(p.f)} · ${esc(p.col)}</span> <button class="mini" onclick="restaurarPapelera(${i})">Restaurar</button></div>`).join('')||'<p class="empty">Papelera vacía.</p>'}${(S.papelera||[]).length?'<button class="btn sec" onclick="restaurarPapelera(0)">Deshacer última eliminación</button><button class="mini" onclick="vacearPapelera()">Vaciar papelera</button>':''}</div>
   <div class="card"><h3>Recursos</h3><button class="btn sec" onclick="go('recursos')">Recursos descargables</button></div>
+  <div class="card"><h3>Política de retención</h3>
+    <p class="meta">Plazo de conservación de datos de estudiantes egresados o retirados (en meses).</p>
+    <input type="number" value="${c.retMeses||60}" onchange="cfg().retMeses=+this.value||60;save();render()">
+    <p class="meta">Valor provisorio de 60 meses: definirlo con tu establecimiento y la normativa vigente antes de usar con datos reales. Los estudiantes marcados antes de esta versión comienzan a contar desde hoy.</p>
+    <button class="btn sec" onclick="purgarRetencion()">Aplicar política de retención ahora</button></div>
   <div class="card"><button class="btn sec" onclick="borrarTodo()">Borrar todos los datos de este perfil</button></div>`;
 }
 async function exportar(){
@@ -759,6 +785,11 @@ const RD_BASE=[
 {id:'rdb4',base:true,t:'Modelo de consentimiento informado (revisar con tu establecimiento)',tipo:'Modelo de documento',nee:'General',c:'Yo, ____________________ (adulto responsable), declaro haber sido informado(a) sobre la evaluación psicoeducativa y el plan de apoyo del estudiante.\nAcepto / No acepto (marcar).\nFecha:\nFirma:'},
 {id:'rdb5',base:true,t:'Guía de estrategias para docentes de aula común',tipo:'Guía',nee:'General',c:'1. Anticipar las actividades y su secuencia.\n2. Usar apoyos visuales para las instrucciones.\n3. Dar tiempo adicional para responder.\n4. Fraccionar tareas largas en pasos cortos.\n5. Reforzar conductas esperadas de forma inmediata y específica.\n6. Coordinar con el equipo PIE antes de cambios importantes.'}
 ];
+RD_BASE.push({id:'rdb6',base:true,t:'Plan de sesión individual',tipo:'Plantilla',nee:'General',c:'Objetivo de la sesión:\nMateriales:\nActividades (inicio, desarrollo, cierre):\nTiempo estimado:\nIndicador de logro:\nObservaciones (sin datos identificatorios):'});
+RD_BASE.push({id:'rdb7',base:true,t:'Pauta de seguimiento de lectura',tipo:'Plantilla',nee:'Dificultades Específicas del Aprendizaje (DEA)',c:'Fecha:\nTexto leído (nivel):\nPrecisión lectora (%):\nVelocidad (palabras por minuto):\nComprensión literal (0-4):\nComprensión inferencial (0-4):\nEstrategias usadas:\nPróximo paso:'});
+RD_BASE.push({id:'rdb8',base:true,t:'Guía de anticipación y rutinas para TEA',tipo:'Guía',nee:'TEA',c:'Rutina visual (secuencia de actividades):\nAnticipación de cambios (aviso previo y apoyo visual):\nIntereses del estudiante que pueden usarse como motivación:\nEstrategias de comunicación (pictogramas, tarjetas, lenguaje simple):\nSeñales de sobrecarga sensorial y medidas de regulación:\nAcuerdos con docentes (sin datos identificatorios):'});
+RD_BASE.push({id:'rdb9',base:true,t:'Pauta de autorregulación y tareas para TDAH',tipo:'Plantilla',nee:'TDAH',c:'Fecha:\nTarea o actividad:\nTiempo de inicio y de mantención de la atención:\nFraccionamiento de la tarea (pasos utilizados):\nApoyos de recordatorio (visuales, verbales, temporizador):\nConductas de autorregulación observadas:\nPróximo ajuste:'});
+RD_BASE.push({id:'rdb10',base:true,t:'Pauta de comprensión y expresión oral para TEL',tipo:'Plantilla',nee:'Trastorno Específico del Lenguaje (TEL)',c:'Fecha:\nActividad de lenguaje:\nComprensión de instrucciones (logrado / parcial / no logrado):\nVocabulario expresivo observado:\nLongitud y estructura de las emisiones:\nApoyos utilizados (modelado, pistas, elección):\nPróximo objetivo:'});
 function getRD(){ try{ return JSON.parse(localStorage.getItem(RKEY))||[]; }catch(e){ return []; } }
 function setRD(l){ localStorage.setItem(RKEY,JSON.stringify(l)); }
 function vRec(){
@@ -1054,15 +1085,15 @@ function vCasos(){
 }
 function addCaso(){
   const m=document.getElementById('c_m').value.trim(); if(!m){ alert('Escribe el motivo'); return; }
-  const ci=document.getElementById('c_i').value||hoy(), cr=document.getElementById('c_r').value;
-  if(ci>hoy()){ alert('La fecha de inicio no puede ser futura.'); return; }
-  if(cr&&cr<ci){ alert('La próxima revisión no puede ser anterior al inicio del caso.'); return; }
-  if(cr&&cr<hoy()&&!confirm('La fecha de próxima revisión ya pasó. ¿Guardar igualmente?')) return;
+  const ini=document.getElementById('c_i').value||hoy(), rev=document.getElementById('c_r').value;
+  if(ini>hoy()){ alert('La fecha de inicio no puede ser futura.'); return; }
+  if(rev&&rev<ini){ alert('La próxima revisión no puede ser anterior al inicio del caso.'); return; }
+  if(rev&&rev<hoy()&&!confirm('La fecha de próxima revisión ya pasó. ¿Guardar igualmente?')) return;
   S.cases=S.cases||[];
   S.cases.push({id:uid(),estudiante:document.getElementById('c_e').value,motivo:m,inicio:document.getElementById('c_i').value||hoy(),revision:document.getElementById('c_r').value,responsable:document.getElementById('c_resp').value.trim(),riesgo:!!document.getElementById('c_rg').value,estado:'Abierto',linea:[{f:hoy(),t:'Caso abierto'}]});
   save(); render();
 }
-function avanzarCaso(id){ const c=S.cases.find(x=>x.id===id); const nx=ESTADOS_CASO[(ESTADOS_CASO.indexOf(c.estado)+1)%ESTADOS_CASO.length]; if(nx==='Cerrado'&&!confirm('¿Cerrar este caso? Podrás seguir viéndolo en la lista.')) return; c.estado=nx; c.linea=c.linea||[]; c.linea.push({f:hoy(),t:'Estado: '+c.estado}); save(); render(); }
+function avanzarCaso(id){ const c=S.cases.find(x=>x.id===id); const sig=ESTADOS_CASO[(ESTADOS_CASO.indexOf(c.estado)+1)%ESTADOS_CASO.length]; if(sig==='Cerrado'&&!confirm('¿Cerrar este caso? Quedará en la lista de cerrados.')) return; c.estado=ESTADOS_CASO[(ESTADOS_CASO.indexOf(c.estado)+1)%ESTADOS_CASO.length]; c.linea=c.linea||[]; c.linea.push({f:hoy(),t:'Estado: '+c.estado}); save(); render(); }
 function notaCaso(id){ const c=S.cases.find(x=>x.id===id); const t=prompt("Nota del caso. Para una derivación escribe 'Derivación: a quién, motivo'."); if(!t) return; c.linea=c.linea||[]; c.linea.push({f:hoy(),t:t.trim()}); save(); render(); }
 /* ===== planificador semanal ===== */
 function vPlanif(){
@@ -1090,6 +1121,17 @@ function addPlan(){
   S.plan=S.plan||[];
   S.plan.push({id:uid(),dia:document.getElementById('pl_d').value,hora:h,tipo:document.getElementById('pl_t').value,min:+document.getElementById('pl_m').value||0,nota:document.getElementById('pl_n').value.trim()});
   save(); render();
+}
+function bindSwipe(){
+  document.querySelectorAll('[data-sw],[data-del]').forEach(el=>{
+    let x0=null;
+    el.addEventListener('pointerdown',e=>{ x0=e.clientX; });
+    el.addEventListener('pointerup',e=>{
+      if(x0===null) return; const dx=e.clientX-x0; x0=null;
+      if(el.dataset.sw && dx>80) toggleTarea(el.dataset.sw);
+      else if(el.dataset.del && dx<-80){ const [col,id]=el.dataset.del.split(':'); borrar(col,id); }
+    });
+  });
 }
 document.addEventListener('visibilitychange',()=>{document.body.classList.toggle('priv',document.hidden&&!!S);});
 boot();
